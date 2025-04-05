@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding RSVP</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>You're Invited to Our Wedding!</h1>
+        <p>Join us for a day filled with love and celebration.</p>
+    </header>
+    
+    <section id="event-details">
+        <h2>Event Details</h2>
+        <p>Date: June 15, 2024</p>
+        <p>Location: The Grand Venue, 123 Wedding Lane, City, State</p>
+        <p>Time: 4:00 PM</p>
+    </section>
+    
+    <section id="rsvp-form">
+        <h2>RSVP</h2>
+        <form id="rsvp" action="#" method="post">
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="attendance">Will you attend?</label>
+            <select id="attendance" name="attendance" required>
+                <option value="">Select an option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+            
+            <button type="submit">Submit RSVP</button>
+        </form>
+    </section>
+    
+    <section id="contact-info">
+        <h2>Contact Us</h2>
+        <p>If you have any questions, feel free to reach out to us at <a href="mailto:info@wedding.com">info@wedding.com</a>.</p>
+    </section>
+    
+    <footer>
+        <p>&copy; 2024 Our Wedding. All rights reserved.</p>
+    </footer>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>
