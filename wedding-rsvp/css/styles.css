@@ -1,3 +1,5 @@
+/* Updated Design for Cohesive Wedding Theme */
+
 /* General Reset */
 body, h1, h2, h3, p, ul, li, a, input, select, button {
     margin: 0;
@@ -6,37 +8,40 @@ body, h1, h2, h3, p, ul, li, a, input, select, button {
 }
 
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Playfair Display', serif; /* Elegant serif font for a wedding theme */
     line-height: 1.6;
-    color: #333;
-    background-color: #f9f9f9;
+    color: #4a4a4a; /* Neutral dark gray text */
+    background-color: #fffaf3; /* Soft cream background */
     padding: 0 20px;
 }
 
 header {
     text-align: center;
-    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    background: linear-gradient(to right, #d4a5a5, #f7d9d9); /* Soft blush gradient */
     color: white;
     padding: 20px 0;
     margin-bottom: 20px;
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+    font-family: 'Playfair Display', serif;
     margin-bottom: 10px;
 }
 
 header p {
     font-size: 1.2rem;
+    font-family: 'Lato', sans-serif; /* Clean sans-serif for contrast */
 }
 
 nav ul {
     display: flex;
     justify-content: center;
     list-style: none;
-    background: #333;
+    background: #d4a5a5; /* Blush pink */
     padding: 10px;
     margin-bottom: 20px;
+    border-radius: 8px;
 }
 
 nav ul li {
@@ -47,17 +52,19 @@ nav ul li a {
     color: white;
     text-decoration: none;
     font-weight: bold;
+    font-family: 'Lato', sans-serif;
     transition: color 0.3s;
 }
 
 nav ul li a:hover {
-    color: #ff7e5f;
+    color: #f7d9d9; /* Lighter blush */
 }
 
 section {
     margin-bottom: 20px;
     padding: 20px;
     background: white;
+    border: 1px solid #f7d9d9; /* Light blush border */
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -65,15 +72,17 @@ section {
 section h2 {
     font-size: 1.8rem;
     margin-bottom: 10px;
-    color: #ff7e5f;
+    color: #d4a5a5; /* Blush pink headings */
+    font-family: 'Playfair Display', serif;
 }
 
 footer {
     text-align: center;
     padding: 10px;
-    background: #333;
+    background: #d4a5a5; /* Blush pink footer */
     color: white;
     margin-top: 20px;
+    border-radius: 8px;
 }
 
 footer ul {
@@ -102,6 +111,7 @@ form {
 
 form label {
     font-weight: bold;
+    font-family: 'Lato', sans-serif;
 }
 
 form input, form select, form button {
@@ -109,10 +119,11 @@ form input, form select, form button {
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
+    font-family: 'Lato', sans-serif;
 }
 
 form button {
-    background: #ff7e5f;
+    background: #d4a5a5; /* Blush pink button */
     color: white;
     border: none;
     cursor: pointer;
@@ -120,5 +131,5 @@ form button {
 }
 
 form button:hover {
-    background: #feb47b;
+    background: #f7d9d9; /* Lighter blush hover */
 }
