@@ -9,7 +9,7 @@ https://github.com/freyhill/freyhill.github.io/tree/93ff85076768e97a60b21dd49beb
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ```
 
 
@@ -33,7 +33,7 @@ https://github.com/Zeeshan-Saleem/Online-Pharmacy/tree/5fc8a7b01aea2c19afb0bec2a
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us</title>
-  <link rel="stylesheet"
+  <link rel="stylesheet" href="styles.css">
 ```
 
 
@@ -41,12 +41,12 @@ https://github.com/Zeeshan-Saleem/Online-Pharmacy/tree/5fc8a7b01aea2c19afb0bec2a
 https://github.com/Danielryan98/LBG_Cohort1/tree/7057d320f0adef617c175703a4a15c4dd8f62ead/contactus.html
 
 ```
-name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <
+  <!-- Removed incomplete tag -->
 ```
 
 
@@ -59,6 +59,6 @@ https://github.com/k210155/websites/tree/904cd460cda6e62096e070b252b391045ff6a1d
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact Us</title
+  <title>Contact Us</title>
 ```
 
