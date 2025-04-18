@@ -29,3 +29,7 @@ if os.path.exists(frontend_build_path):
         if catch_all.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not found")
         return FileResponse(os.path.join(frontend_build_path, "index.html"))
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the wedding RSVP API"}
