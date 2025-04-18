@@ -1,0 +1,3 @@
+"""
+Wedding RSVP application package
+"""
