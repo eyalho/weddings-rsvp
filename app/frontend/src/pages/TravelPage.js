@@ -1,39 +1,6 @@
 import React from 'react';
 
 function TravelPage() {
-  const hotels = [
-    {
-      id: 1,
-      name: 'The Plaza Hotel',
-      description: 'Our wedding venue with a special room block for guests.',
-      address: '768 5th Ave, New York, NY 10019',
-      phone: '(212) 759-3000',
-      website: 'https://www.theplazany.com',
-      discount: 'Use code WEDDINGJJ for 15% off the standard rate.',
-      cutoffDate: 'May 15, 2024'
-    },
-    {
-      id: 2,
-      name: 'Park Central Hotel',
-      description: 'A mid-range option, 10-minute walk from the venue.',
-      address: '870 7th Ave, New York, NY 10019',
-      phone: '(212) 247-8000',
-      website: 'https://www.parkcentralny.com',
-      discount: 'Use code WEDDING2024 for 10% off the standard rate.',
-      cutoffDate: 'May 20, 2024'
-    },
-    {
-      id: 3,
-      name: 'Pod 51 Hotel',
-      description: 'Budget-friendly option, 15-minute subway ride to the venue.',
-      address: '230 E 51st St, New York, NY 10022',
-      phone: '(212) 355-0300',
-      website: 'https://www.thepodhotel.com',
-      discount: 'No special rate available.',
-      cutoffDate: 'N/A'
-    },
-  ];
-
   return (
     <div className="travel-page">
       <h1>מקום האירוע</h1>

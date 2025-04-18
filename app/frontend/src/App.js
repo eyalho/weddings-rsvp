@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import './styles/App.css';
 
@@ -13,8 +13,8 @@ function App() {
   const location = useLocation();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   
-  // Wedding date: May 23, 2025 at 12:00
-  const weddingDate = new Date('2025-05-23T12:00:00');
+  // Wedding date: May 23, 2025 at 12:00 - wrapped in useMemo to avoid recreating on every render
+  const weddingDate = useMemo(() => new Date('2025-05-23T12:00:00'), []);
   
   useEffect(() => {
     // Initial calculation
