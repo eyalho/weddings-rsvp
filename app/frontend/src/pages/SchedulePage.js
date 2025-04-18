@@ -4,52 +4,52 @@ function SchedulePage() {
   const events = [
     {
       id: 1,
-      time: '2:00 PM - 3:00 PM',
-      title: 'Ceremony',
-      location: 'Central Park, Bethesda Fountain',
-      description: 'Join us as we exchange vows in the beautiful surroundings of Central Park.'
+      time: '12:00',
+      title: 'קבלת פנים',
+      location: 'הלורנס, תל אביב',
+      description: 'קבלת פנים במתחם החיצוני של האולם, כיבוד קל ושתייה.'
     },
     {
       id: 2,
-      time: '3:15 PM - 4:30 PM',
-      title: 'Cocktail Hour',
-      location: 'The Plaza Hotel, Terrace Garden',
-      description: 'Enjoy drinks and hors d\'oeuvres while we take photos. Live music will be provided.'
+      time: '13:00',
+      title: 'קבלת פנים ממשיכה',
+      location: 'הלורנס, תל אביב',
+      description: 'המשך קבלת פנים, צילומים ואיחולים לזוג המאושר.'
     },
     {
       id: 3,
-      time: '5:00 PM - 6:00 PM',
-      title: 'Guest Arrival & Seating',
-      location: 'The Plaza Hotel, Grand Ballroom',
-      description: 'Take your seats for dinner and festivities.'
+      time: '13:30',
+      title: 'חופה וקידושין',
+      location: 'הלורנס, תל אביב',
+      description: 'טקס החופה וקידושין. נשמח שכולם יהיו נוכחים בזמן.'
     },
     {
       id: 4,
-      time: '6:00 PM - 7:30 PM',
-      title: 'Dinner',
-      location: 'The Plaza Hotel, Grand Ballroom',
-      description: 'A formal dinner will be served, including your choice of entrée as specified in your RSVP.'
+      time: '14:30',
+      title: 'ארוחה חגיגית',
+      location: 'אולם הלורנס',
+      description: 'ארוחה חגיגית, תוכלו ליהנות ממגוון מנות ומטעמים.'
     },
     {
       id: 5,
-      time: '7:30 PM - 8:00 PM',
-      title: 'Toasts & Cake Cutting',
-      location: 'The Plaza Hotel, Grand Ballroom',
-      description: 'Speeches from the wedding party, followed by the cutting of the cake.'
+      time: '15:30',
+      title: 'ריקודים',
+      location: 'רחבת הריקודים',
+      description: 'מוזמנים לרקוד ולחגוג איתנו!'
     },
     {
       id: 6,
-      time: '8:00 PM - 11:00 PM',
-      title: 'Dancing & Celebration',
-      location: 'The Plaza Hotel, Grand Ballroom',
-      description: 'Dance the night away with us!'
+      time: '18:00',
+      title: 'סיום משוער',
+      location: 'הלורנס',
+      description: 'סיום משוער של האירוע.'
     }
   ];
   
   return (
     <div className="schedule-page">
-      <h1>Wedding Day Schedule</h1>
-      <p className="schedule-date">Saturday, June 15, 2024</p>
+      <h1>לוח זמנים</h1>
+      <p className="schedule-date">יום שישי, כ״ה באייר תשפ״ה, 23.05.2025</p>
       
       <div className="timeline">
         {events.map(event => (
@@ -65,11 +65,11 @@ function SchedulePage() {
       </div>
       
       <div className="schedule-notes">
-        <h3>Additional Information</h3>
+        <h3>מידע נוסף</h3>
         <ul>
-          <li>Attire: Formal/Black Tie</li>
-          <li>Parking: Valet parking available at The Plaza Hotel</li>
-          <li>Transportation: Shuttles will be provided from the ceremony to the reception</li>
+          <li><strong>לבוש:</strong> לבוש אלגנטי</li>
+          <li><strong>חניה:</strong> חניה זמינה במתחם וברחובות הסמוכים</li>
+          <li><strong>הסעות:</strong> פרטים על הסעות יפורסמו בהמשך</li>
         </ul>
       </div>
     </div>

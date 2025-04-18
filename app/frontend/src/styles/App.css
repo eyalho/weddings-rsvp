@@ -259,16 +259,6 @@ button[type="submit"]:hover {
   margin: 0 auto;
 }
 
-.timeline::before {
-  content: '';
-  position: absolute;
-  right: 100px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background-color: #b17a55;
-}
-
 .timeline-item {
   display: flex;
   margin-bottom: 2rem;
@@ -289,17 +279,6 @@ button[type="submit"]:hover {
   padding-right: 1.5rem;
   position: relative;
   text-align: right;
-}
-
-.timeline-content::before {
-  content: '';
-  position: absolute;
-  right: -5px;
-  top: 5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #b17a55;
 }
 
 .timeline-location {
@@ -470,10 +449,6 @@ button[type="submit"]:hover {
   
   .main-nav li {
     margin: 0.5rem 0;
-  }
-  
-  .timeline::before {
-    right: 20px;
   }
   
   .timeline-time {

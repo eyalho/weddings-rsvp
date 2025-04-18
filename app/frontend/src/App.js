@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import './styles/App.css';
 
@@ -11,29 +11,61 @@ import RegistryPage from './pages/RegistryPage';
 
 function App() {
   const location = useLocation();
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  
+  // Wedding date: May 23, 2025 at 12:00
+  const weddingDate = new Date('2025-05-23T12:00:00');
+  
+  useEffect(() => {
+    // Initial calculation
+    calculateTimeRemaining();
+    
+    const intervalId = setInterval(calculateTimeRemaining, 1000);
+    
+    function calculateTimeRemaining() {
+      const now = new Date();
+      const difference = weddingDate - now;
+      
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        setCountdown({ days, hours, minutes, seconds });
+      }
+    }
+    
+    return () => clearInterval(intervalId);
+  }, [weddingDate]);
+  
+  // Hebrew text formatting
+  const formattedCountdown = `בעוד ${countdown.days} ימים ${countdown.hours} שעות`;
   
   return (
     <div className="App">
       <header className="App-header">
-        <h1>John & Jane's Wedding</h1>
-        <p className="wedding-date">June 15, 2024</p>
+        <h1>יהל & אסף</h1>
+        <p className="wedding-date">יום שישי, כ״ה באייר תשפ״ה</p>
+        <p className="wedding-date">23.05.2025</p>
+        <p className="countdown">מתחתנים {formattedCountdown}</p>
         
         <nav className="main-nav">
           <ul>
             <li className={location.pathname === '/' ? 'active' : ''}>
-              <Link to="/">Home</Link>
+              <Link to="/">ראשי</Link>
             </li>
             <li className={location.pathname === '/schedule' ? 'active' : ''}>
-              <Link to="/schedule">Schedule</Link>
+              <Link to="/schedule">לוח זמנים</Link>
             </li>
             <li className={location.pathname === '/gallery' ? 'active' : ''}>
-              <Link to="/gallery">Gallery</Link>
+              <Link to="/gallery">גלריה</Link>
             </li>
             <li className={location.pathname === '/travel' ? 'active' : ''}>
-              <Link to="/travel">Travel</Link>
+              <Link to="/travel">מקום האירוע</Link>
             </li>
             <li className={location.pathname === '/registry' ? 'active' : ''}>
-              <Link to="/registry">Registry</Link>
+              <Link to="/registry">מתנות</Link>
             </li>
           </ul>
         </nav>
@@ -50,7 +82,7 @@ function App() {
       </main>
       
       <footer className="App-footer">
-        <p>&copy; 2024 John & Jane</p>
+        <p>יהל & אסף 2025 ©</p>
       </footer>
     </div>
   );

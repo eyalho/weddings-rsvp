@@ -4,42 +4,42 @@ function RegistryPage() {
   const registries = [
     {
       id: 1,
-      name: 'Crate & Barrel',
-      logo: 'https://via.placeholder.com/150x80?text=Crate+%26+Barrel',
-      description: 'Kitchen and home goods for our new apartment.',
-      url: 'https://www.crateandbarrel.com/gift-registry/',
+      name: 'מתנה כספית',
+      logo: 'https://via.placeholder.com/150x80?text=מתנה+כספית',
+      description: 'נשמח לקבל את ברכתכם באמצעות מתנה כספית שתעזור לנו להתחיל את חיינו המשותפים.',
+      url: '#',
     },
     {
       id: 2,
-      name: 'Zola',
-      logo: 'https://via.placeholder.com/150x80?text=Zola',
-      description: 'Our main registry with various items and experiences.',
-      url: 'https://www.zola.com/registry/',
+      name: 'טרמינל X',
+      logo: 'https://via.placeholder.com/150x80?text=טרמינל+X',
+      description: 'רשימת מתנות לבית החדש שלנו.',
+      url: 'https://www.terminalx.com/registry',
     },
     {
       id: 3,
-      name: 'Honeymoon Fund',
-      logo: 'https://via.placeholder.com/150x80?text=Honeymoon+Fund',
-      description: 'Contribute to our dream honeymoon in Bali.',
-      url: 'https://www.honeyfund.com',
+      name: 'ירושלמי',
+      logo: 'https://via.placeholder.com/150x80?text=ירושלמי',
+      description: 'רשימת מתנות וריהוט.',
+      url: 'https://www.yerushalmi.co.il',
     },
     {
       id: 4,
-      name: 'Charity: Water',
-      logo: 'https://via.placeholder.com/150x80?text=Charity+Water',
-      description: 'In lieu of gifts, consider donating to this charity that\'s close to our hearts.',
-      url: 'https://www.charitywater.org',
+      name: 'הירושה לעתיד',
+      logo: 'https://via.placeholder.com/150x80?text=הירושה+לעתיד',
+      description: 'במקום מתנה, אנא שקלו לתרום לארגון חברתי שקרוב לליבנו.',
+      url: 'https://www.future-inheritance.org',
     }
   ];
 
   return (
     <div className="registry-page">
-      <h1>Gift Registry</h1>
+      <h1>מתנות</h1>
       
       <div className="registry-intro">
         <p>
-          Thank you for considering a gift for our wedding. Your presence on our special day is the greatest gift of all, 
-          but if you'd like to help us celebrate with a present, we've registered at the following places:
+          תודה שאתם שוקלים להעניק לנו מתנה לרגל החתונה. הנוכחות שלכם ביום המיוחד שלנו היא המתנה הגדולה ביותר,
+          אך אם ברצונכם לחגוג איתנו עם מתנה, הנה כמה אפשרויות:
         </p>
       </div>
       
@@ -47,38 +47,39 @@ function RegistryPage() {
         {registries.map(registry => (
           <div key={registry.id} className="registry-card">
             <div className="registry-logo">
-              <img src={registry.logo} alt={`${registry.name} logo`} />
+              <img src={registry.logo} alt={`לוגו של ${registry.name}`} />
             </div>
             <div className="registry-info">
               <h3>{registry.name}</h3>
               <p>{registry.description}</p>
-              <a 
-                href={registry.url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="registry-button"
-              >
-                View Registry
-              </a>
+              {registry.url !== '#' && (
+                <a 
+                  href={registry.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="registry-button"
+                >
+                  לצפייה ברשימה
+                </a>
+              )}
             </div>
           </div>
         ))}
       </div>
       
       <div className="registry-note">
-        <h3>A Note About Gifts</h3>
+        <h3>הערה בנוגע למתנות</h3>
         <p>
-          Many of you are traveling from afar to join us, and we understand the costs associated with that. 
-          Please know that your presence means more to us than any material gift, and we're just excited to 
-          have you celebrate with us on our special day!
+          רבים מכם מגיעים מרחוק כדי להצטרף אלינו, ואנו מבינים את העלויות הכרוכות בכך.
+          אנא דעו שהנוכחות שלכם חשובה לנו יותר מכל מתנה חומרית, ואנו פשוט נרגשים לחגוג איתכם ביום המיוחד שלנו!
         </p>
         <p>
-          If you choose to send a physical gift rather than purchasing from our registry, please have it shipped to:
+          אם תבחרו לשלוח מתנה פיזית במקום לרכוש מאחת הרשימות, אנא שלחו אותה לכתובת:
         </p>
         <address>
-          John &amp; Jane Smith<br />
-          123 Wedding Lane<br />
-          New York, NY 10001
+          יהל ואסף<br />
+          רחוב האהבה 123<br />
+          תל אביב, 6100000
         </address>
       </div>
     </div>

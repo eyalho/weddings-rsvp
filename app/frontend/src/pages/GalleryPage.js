@@ -1,51 +1,51 @@
 import React from 'react';
 
 function GalleryPage() {
-  // In a real application, you would load these from an API or config
+  // בחיים אמיתיים, היינו טוענים את התמונות מה-API או מקובץ קונפיגורציה
   const photos = [
     {
       id: 1,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+1',
-      alt: 'Engagement Photo 1',
-      caption: 'Our engagement in Central Park'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+1',
+      alt: 'יהל ואסף 1',
+      caption: 'הצעת הנישואין בחוף הים'
     },
     {
       id: 2,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+2',
-      alt: 'Engagement Photo 2',
-      caption: 'Weekend getaway in Wine Country'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+2',
+      alt: 'יהל ואסף 2',
+      caption: 'טיול בצפון'
     },
     {
       id: 3,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+3',
-      alt: 'Engagement Photo 3',
-      caption: 'The day we met'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+3',
+      alt: 'יהל ואסף 3',
+      caption: 'היום שבו נפגשנו'
     },
     {
       id: 4,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+4',
-      alt: 'Engagement Photo 4',
-      caption: 'Holiday memories'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+4',
+      alt: 'יהל ואסף 4',
+      caption: 'זכרונות מחופשה'
     },
     {
       id: 5,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+5',
-      alt: 'Engagement Photo 5',
-      caption: 'Family dinner'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+5',
+      alt: 'יהל ואסף 5',
+      caption: 'ארוחת ערב משפחתית'
     },
     {
       id: 6,
-      src: 'https://via.placeholder.com/400x300?text=Engagement+Photo+6',
-      alt: 'Engagement Photo 6',
-      caption: 'Beach day'
+      src: 'https://via.placeholder.com/400x300?text=יהל+ואסף+6',
+      alt: 'יהל ואסף 6',
+      caption: 'יום בחוף'
     },
   ];
 
   return (
     <div className="gallery-page">
-      <h1>Our Journey Together</h1>
+      <h1>הסיפור שלנו</h1>
       <p className="gallery-intro">
-        Here are some of our favorite moments from our relationship. We can't wait to create more memories with you on our special day!
+        הנה כמה מהרגעים האהובים עלינו מהקשר שלנו. אנחנו מחכים ליצור זכרונות חדשים איתכם ביום המיוחד שלנו!
       </p>
       
       <div className="photo-grid">

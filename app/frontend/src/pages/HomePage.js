@@ -5,9 +5,12 @@ function HomePage() {
   return (
     <div className="home-page">
       <div className="hero-section">
-        <h1>John & Jane</h1>
-        <p className="wedding-date">June 15, 2024</p>
-        <p className="wedding-location">Central Park, New York</p>
+        <h1>יהל & אסף</h1>
+        <p className="wedding-date">כ״ה באייר תשפ״ה • 23.05.2025</p>
+        <p className="wedding-location">הלורנס, הצורפים 18, תל אביב-יפו</p>
+        <p className="wedding-invitation">
+          אנו שמחים ונרגשים להזמין אתכם לחגוג עמנו את יום נישואינו
+        </p>
       </div>
       
       <div className="rsvp-section">
@@ -15,23 +18,28 @@ function HomePage() {
       </div>
       
       <div className="info-section">
-        <h2>Wedding Details</h2>
+        <h2>פרטי האירוע</h2>
         <p>
-          Join us for our special day. We've created this website to provide
-          you with all the information you need for our upcoming wedding.
+          מתרגשים להזמין אתכם לחגוג איתנו. יצרנו אתר זה כדי לספק לכם את כל המידע שתצטרכו לקראת החתונה.
         </p>
         
         <div className="event-details">
           <div className="detail-item">
-            <h3>Ceremony</h3>
-            <p>2:00 PM - 3:00 PM</p>
-            <p>Central Park, Bethesda Fountain</p>
+            <h3>קבלת פנים</h3>
+            <p>12:00</p>
+            <p>הלורנס, הצורפים 18, תל אביב-יפו</p>
           </div>
           
           <div className="detail-item">
-            <h3>Reception</h3>
-            <p>6:00 PM - 11:00 PM</p>
-            <p>The Plaza Hotel, Grand Ballroom</p>
+            <h3>חופה</h3>
+            <p>13:30</p>
+            <p>הלורנס</p>
+          </div>
+          
+          <div className="detail-item">
+            <h3>מסיבה</h3>
+            <p>14:30 - 18:00</p>
+            <p>הלורנס</p>
           </div>
         </div>
       </div>
