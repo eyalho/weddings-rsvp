@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.webhook_service import handle_webhook, handle_status_callback
+from ...services.webhook_service import handle_webhook, handle_status_callback
 
 router = APIRouter()
 

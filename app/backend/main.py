@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from api.endpoints import webhooks
-from core.config import settings
+from .api.endpoints import webhooks
+from .core.config import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
