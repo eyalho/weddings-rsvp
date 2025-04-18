@@ -24,12 +24,17 @@ logging.basicConfig(
     stream=sys.stdout  # Force output to stdout which Gunicorn can capture
 )
 
+logger = logging.getLogger(__name__)
+
 # Define the root route handler with conditional logic
 @app.get("/", include_in_schema=False)
 async def root():
+    logger.warning("Root endpoint accessed")
     if os.path.exists(frontend_build_path):
+        logger.warning("Serving frontend index.html")
         return FileResponse(os.path.join(frontend_build_path, "index.html"))
     else:
+        logger.warning("Serving API welcome message")
         return JSONResponse(content={"message": "Welcome to the wedding RSVP API"})
 
 # Mount static files if build directory exists
