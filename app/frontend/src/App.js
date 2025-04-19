@@ -8,6 +8,7 @@ import GalleryPage from './pages/GalleryPage';
 import SchedulePage from './pages/SchedulePage';
 import TravelPage from './pages/TravelPage';
 import RegistryPage from './pages/RegistryPage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   const location = useLocation();
@@ -41,6 +42,17 @@ function App() {
   
   // Hebrew text formatting
   const formattedCountdown = `בעוד ${countdown.days} ימים ${countdown.hours} שעות`;
+  
+  // Hide header and footer on admin page
+  const isAdminPage = location.pathname === '/admin';
+  
+  if (isAdminPage) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminPage />} />
+      </Routes>
+    );
+  }
   
   return (
     <div className="App">
@@ -78,6 +90,7 @@ function App() {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/travel" element={<TravelPage />} />
           <Route path="/registry" element={<RegistryPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </main>
       
