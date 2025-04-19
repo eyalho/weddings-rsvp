@@ -62,6 +62,11 @@ async def webhook_endpoint(request: Request):
                     num_media=message_data.get("media_count", "0"),
                     status=form_data.get("SmsStatus", ""),
                     wa_id=form_data.get("WaId", ""),
+                    message_type=message_data.get("MessageType", ""),
+                    button_text=message_data.get("ButtonText", ""),
+                    button_payload=message_data.get("ButtonPayload", ""),
+                    original_replied_message_sid=message_data.get("OriginalRepliedMessageSid", ""),
+                    original_replied_message_sender=message_data.get("OriginalRepliedMessageSender", "")
                 )
                 logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body}")
                 
@@ -87,6 +92,11 @@ async def webhook_endpoint(request: Request):
                     num_media=form_data.get("NumMedia", "0"),
                     status=form_data.get("SmsStatus", ""),
                     wa_id=form_data.get("WaId", ""),
+                    message_type=form_data.get("MessageType", ""),
+                    button_text=form_data.get("ButtonText", ""),
+                    button_payload=form_data.get("ButtonPayload", ""),
+                    original_replied_message_sid=form_data.get("OriginalRepliedMessageSid", ""),
+                    original_replied_message_sender=form_data.get("OriginalRepliedMessageSender", "")
                 )
                 logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body}")
                 
