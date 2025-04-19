@@ -18,7 +18,7 @@ def test_whatsapp_message_extraction(test_whatsapp_text_message):
 def test_url_encoded_message_parsing():
     """Test parsing of URL-encoded WhatsApp messages"""
     # Simulate a URL-encoded message body from Twilio
-    encoded_body = "SmsMessageSid=SM12345&Body=Hello+%D7%A9%D7%9C%D7%95%D7%9D&From=whatsapp%3A%2B9725551234"
+    encoded_body = "SmsMessageSid=SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&Body=Hello+%D7%A9%D7%9C%D7%95%D7%9D&From=whatsapp%3A%2B9725551234"
     
     # Parse it manually to verify our parsing logic
     form_data = {}
@@ -29,7 +29,7 @@ def test_url_encoded_message_parsing():
             form_data[key] = unquote_plus(value)
     
     # Verify correct parsing
-    assert form_data["SmsMessageSid"] == "SM12345"
+    assert form_data["SmsMessageSid"] == "SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     assert form_data["Body"] == "Hello שלום"  # Hebrew characters correctly decoded
     assert form_data["From"] == "whatsapp:+9725551234"
 

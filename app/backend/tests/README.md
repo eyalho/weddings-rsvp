@@ -45,20 +45,20 @@ The tests simulate Twilio WhatsApp webhook messages using the `application/x-www
 
 ```python
 {
-    "SmsMessageSid": "SM95fd59caa1ad5c3138d42f804d9ffe04",
+    "SmsMessageSid": "SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "NumMedia": "0",
     "ProfileName": "Eyal",
     "MessageType": "text",
-    "SmsSid": "SM95fd59caa1ad5c3138d42f804d9ffe04",
+    "SmsSid": "SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "WaId": "972506228892",
     "SmsStatus": "received",
     "Body": "אישור הגעה",
     "To": "whatsapp:+972509518554",
-    "MessagingServiceSid": "MGd48e1987c810083b6a6d18138f05fb68",
+    "MessagingServiceSid": "MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "NumSegments": "1",
     "ReferralNumMedia": "0",
-    "MessageSid": "SM95fd59caa1ad5c3138d42f804d9ffe04",
-    "AccountSid": "AC313eff5e520d98b7d65bc54c571b9712",
+    "MessageSid": "SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "AccountSid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "From": "whatsapp:+972506228892",
     "ApiVersion": "2010-04-01"
 }
@@ -68,22 +68,22 @@ The tests simulate Twilio WhatsApp webhook messages using the `application/x-www
 
 ```python
 {
-    "SmsMessageSid": "MMabcdef123456789",
+    "SmsMessageSid": "MMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "NumMedia": "1",
     "ProfileName": "מיכל",
     "MessageType": "text",
-    "SmsSid": "MMabcdef123456789",
+    "SmsSid": "MMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "WaId": "9725054321123",
     "SmsStatus": "received",
     "Body": "",
     "To": "whatsapp:+972509518554",
     "MediaContentType0": "image/jpeg",
-    "MediaUrl0": "https://api.twilio.com/2010-04-01/Accounts/AC313eff5e520d98b7d65bc54c571b9712/Messages/MMabcdef123456789/Media/ME123456",
-    "MessagingServiceSid": "MGd48e1987c810083b6a6d18138f05fb68",
+    "MediaUrl0": "https://example.com/api/2010-04-01/Accounts/ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/Messages/MMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/Media/MExxxx",
+    "MessagingServiceSid": "MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "NumSegments": "1",
     "ReferralNumMedia": "0",
-    "MessageSid": "MMabcdef123456789",
-    "AccountSid": "AC313eff5e520d98b7d65bc54c571b9712",
+    "MessageSid": "MMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "AccountSid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "From": "whatsapp:+9725054321123",
     "ApiVersion": "2010-04-01"
 }
