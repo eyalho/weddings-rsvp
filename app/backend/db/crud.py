@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any, Union
 
 from sqlalchemy.orm import Session
 
-from app.backend.db.models import UserResponse, RsvpGuest, ButtonResponse, NumericResponse, RsvpStatistics
+from app.backend.db.models import UserResponse, RsvpGuest, get_rsvp_statistics, RsvpStats
 
 
 # UserResponse CRUD operations
@@ -187,72 +187,4 @@ def delete_rsvp_guest(db: Session, guest_id: int) -> bool:
         
     db.delete(guest)
     db.commit()
-    return True
-
-
-# View CRUD operations - Read-only
-def get_button_responses(db: Session) -> List[ButtonResponse]:
-    """
-    Get all button responses.
-    
-    Args:
-        db: Database session
-        
-    Returns:
-        List of ButtonResponse objects
-    """
-    return db.query(ButtonResponse).order_by(ButtonResponse.created_at).all()
-
-
-def get_button_responses_by_question(db: Session, question_key: str) -> List[ButtonResponse]:
-    """
-    Get button responses for a specific question.
-    
-    Args:
-        db: Database session
-        question_key: Question key to filter by
-        
-    Returns:
-        List of ButtonResponse objects
-    """
-    return db.query(ButtonResponse).filter(ButtonResponse.question_key == question_key).order_by(ButtonResponse.created_at).all()
-
-
-def get_numeric_responses(db: Session) -> List[NumericResponse]:
-    """
-    Get all numeric responses.
-    
-    Args:
-        db: Database session
-        
-    Returns:
-        List of NumericResponse objects
-    """
-    return db.query(NumericResponse).order_by(NumericResponse.created_at).all()
-
-
-def get_numeric_responses_by_question(db: Session, question_key: str) -> List[NumericResponse]:
-    """
-    Get numeric responses for a specific question.
-    
-    Args:
-        db: Database session
-        question_key: Question key to filter by
-        
-    Returns:
-        List of NumericResponse objects
-    """
-    return db.query(NumericResponse).filter(NumericResponse.question_key == question_key).order_by(NumericResponse.created_at).all()
-
-
-def get_rsvp_statistics(db: Session) -> Optional[RsvpStatistics]:
-    """
-    Get RSVP statistics.
-    
-    Args:
-        db: Database session
-        
-    Returns:
-        RsvpStatistics object if found, None otherwise
-    """
-    return db.query(RsvpStatistics).first() 
+    return True 

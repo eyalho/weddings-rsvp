@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
 from backend.db import crud
-from backend.db.models import RsvpGuest, RsvpStatistics
+from backend.db.models import RsvpGuest, RsvpStats
 
 router = APIRouter()
 

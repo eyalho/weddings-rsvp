@@ -10,10 +10,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, NamedTuple
 from datetime import datetime
 import os
 import sys
+from collections import defaultdict
 
 Base = declarative_base()
 
@@ -65,78 +66,6 @@ class RsvpGuest(Base):
     
     def __repr__(self):
         return f"<RsvpGuest(id={self.id}, name={self.name}, attending={self.attending})>"
-
-
-class ButtonResponse(Base):
-    """
-    Model for the button_responses view.
-    
-    Represents aggregated button response data.
-    """
-    __tablename__ = "button_responses"
-    
-    # This is a database view, not a table
-    __table_args__ = {"info": {"is_view": True}}
-    
-    id = Column(Integer, primary_key=True)
-    question_key = Column(String(50), nullable=False)
-    response_value = Column(String(50), nullable=False)
-    count = Column(Integer, nullable=False)
-    
-    def __repr__(self):
-        return f"<ButtonResponse(question={self.question_key}, value={self.response_value}, count={self.count})>"
-
-
-class NumericResponse(Base):
-    """
-    Model for the numeric_responses view.
-    
-    Represents aggregated numeric response data.
-    """
-    __tablename__ = "numeric_responses"
-    
-    # This is a database view, not a table
-    __table_args__ = {"info": {"is_view": True}}
-    
-    id = Column(Integer, primary_key=True)
-    question_key = Column(String(50), nullable=False)
-    min_value = Column(Float)
-    max_value = Column(Float)
-    avg_value = Column(Float)
-    count = Column(Integer)
-    
-    def __repr__(self):
-        return f"<NumericResponse(question={self.question_key}, avg={self.avg_value}, count={self.count})>"
-
-
-class RsvpStatistics(Base):
-    """
-    Model for the rsvp_statistics view.
-    
-    Represents aggregated RSVP statistics.
-    """
-    __tablename__ = "rsvp_statistics"
-    
-    # This is a database view, not a table
-    __table_args__ = {"info": {"is_view": True}}
-    
-    id = Column(Integer, primary_key=True)
-    total_responses = Column(Integer)
-    attending_count = Column(Integer)
-    not_attending_count = Column(Integer)
-    total_guests = Column(Integer)
-    attending_guests = Column(Integer)
-    not_attending_guests = Column(Integer)
-    
-    @hybrid_property
-    def attendance_rate(self) -> float:
-        """Calculate the attendance rate as a percentage."""
-        if self.total_guests == 0:
-            return 0.0
-        return (self.attending_guests / self.total_guests) * 100
-    
-    def __repr__(self):
-        return f"<RsvpStatistics(attending={self.attending_guests}, total={self.total_guests})>"
 
 
 # Helper functions for SQLAlchemy models
@@ -243,17 +172,78 @@ def create_guest(db: Session, response_id: int, guest_data: Dict[str, Any]) -> R
     return guest
 
 
-def get_rsvp_statistics(db: Session) -> Optional[RsvpStatistics]:
+class RsvpStats(NamedTuple):
+    """Data structure for RSVP statistics."""
+    total_responses: int
+    attending_count: int
+    not_attending_count: int
+    total_guests: int
+    attending_guests: int
+    not_attending_guests: int
+    
+    @property
+    def attendance_rate(self) -> float:
+        """Calculate the attendance rate as a percentage."""
+        if self.total_guests == 0:
+            return 0.0
+        return (self.attending_guests / self.total_guests) * 100
+
+
+def get_rsvp_statistics(db: Session) -> Optional[RsvpStats]:
     """
-    Get the RSVP statistics.
+    Get the RSVP statistics by analyzing user responses.
     
     Args:
         db: Database session
         
     Returns:
-        The RsvpStatistics object or None
+        RsvpStats object with statistics
     """
-    return db.query(RsvpStatistics).first()
+    # Get the latest response for each phone number
+    subq = db.query(
+        UserResponse.phone_number,
+        func.max(UserResponse.updated_at).label('max_updated')
+    ).group_by(UserResponse.phone_number).subquery('latest_responses')
+    
+    latest_responses = db.query(UserResponse).join(
+        subq,
+        (UserResponse.phone_number == subq.c.phone_number) & 
+        (UserResponse.updated_at == subq.c.max_updated)
+    ).all()
+    
+    # Initialize counters
+    total_responses = len(latest_responses)
+    attending_count = 0
+    not_attending_count = 0
+    
+    # Get all guests associated with the latest responses
+    response_ids = [r.id for r in latest_responses]
+    all_guests = db.query(RsvpGuest).filter(
+        RsvpGuest.user_response_id.in_(response_ids)
+    ).all()
+    
+    # Count guests
+    total_guests = len(all_guests)
+    attending_guests = sum(1 for g in all_guests if g.attending)
+    not_attending_guests = total_guests - attending_guests
+    
+    # Count responses with attending guests
+    response_attendance = defaultdict(bool)
+    for guest in all_guests:
+        if guest.attending:
+            response_attendance[guest.user_response_id] = True
+    
+    attending_count = sum(1 for r_id, attending in response_attendance.items() if attending)
+    not_attending_count = total_responses - attending_count
+    
+    return RsvpStats(
+        total_responses=total_responses,
+        attending_count=attending_count,
+        not_attending_count=not_attending_count,
+        total_guests=total_guests,
+        attending_guests=attending_guests,
+        not_attending_guests=not_attending_guests
+    )
 
 
 def get_responses_by_phone(db: Session, phone_number: str) -> List[UserResponse]:

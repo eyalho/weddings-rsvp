@@ -9,15 +9,13 @@ from app.backend.db.models import (
     Base,
     UserResponse,
     RsvpGuest,
-    ButtonResponse,
-    NumericResponse,
-    RsvpStatistics,
     create_response,
     get_guest_by_phone,
     update_guest,
     create_guest,
     get_rsvp_statistics,
-    get_responses_by_phone
+    get_responses_by_phone,
+    RsvpStats
 )
 
 __all__ = [
@@ -26,13 +24,11 @@ __all__ = [
     "Base",
     "UserResponse",
     "RsvpGuest",
-    "ButtonResponse",
-    "NumericResponse", 
-    "RsvpStatistics",
     "create_response",
     "get_guest_by_phone",
     "update_guest",
     "create_guest",
     "get_rsvp_statistics",
-    "get_responses_by_phone"
+    "get_responses_by_phone",
+    "RsvpStats"
 ] 
