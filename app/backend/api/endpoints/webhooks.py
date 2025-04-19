@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 def parse_form_data(body_str):
     """Parse URL-encoded form data."""
     form_data = {}
+    logger.info(f"Parsing form data: {body_str}")
     for param in body_str.split('&'):
         if '=' in param:
             key, value = param.split('=', 1)
             form_data[key] = unquote_plus(value)
+    logger.info(f"Parsed form data: {form_data}")
     return form_data
 
 def extract_whatsapp_data(form_data):
@@ -30,28 +32,6 @@ def extract_whatsapp_data(form_data):
         "body": form_data.get("Body", ""),
         "profile_name": form_data.get("ProfileName", ""),
         "media_count": form_data.get("NumMedia", "0"),
-    }
-    
-    # Log the message
-    logger.info(f"WhatsApp message from {message['profile_name']}: {message['body']}")
-    
-    return message
-
-# For backward compatibility with tests
-def extract_whatsapp_message(form_data):
-    """Legacy function to extract WhatsApp message details from form data.
-    
-    Maintained for backward compatibility with tests.
-    """
-    message = {
-        "message_sid": form_data.get("MessageSid", ""),
-        "from_number": form_data.get("From", "").replace("whatsapp:", ""),
-        "to_number": form_data.get("To", "").replace("whatsapp:", ""),
-        "profile_name": form_data.get("ProfileName", ""),
-        "body": form_data.get("Body", ""),
-        "num_media": form_data.get("NumMedia", "0"),
-        "status": form_data.get("SmsStatus", ""),
-        "wa_id": form_data.get("WaId", ""),
     }
     
     # Log the message
@@ -72,10 +52,14 @@ async def webhook_endpoint(request: Request):
         # Parse based on content type
         content_type = request.headers.get('content-type', '').lower()
         
+        
+        # Not called in prod:
         if 'application/json' in content_type:
             # JSON payload
             payload = json.loads(body_str)
             logger.info(f"Received JSON webhook with {len(payload)} keys")
+
+
         elif 'application/x-www-form-urlencoded' in content_type:
             # Form data (typical for Twilio)
             form_data = parse_form_data(body_str)

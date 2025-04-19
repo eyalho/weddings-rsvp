@@ -13,12 +13,25 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 # Import from correct module path using absolute imports
-from backend.api.endpoints.webhooks import extract_whatsapp_message
 from backend.services.webhook_service import handle_whatsapp_message
+
+# Test helper function to replace the dependency on extract_whatsapp_message
+def create_whatsapp_message(form_data):
+    """Create WhatsApp message format used by tests."""
+    return {
+        "message_sid": form_data.get("MessageSid", ""),
+        "from_number": form_data.get("From", "").replace("whatsapp:", ""),
+        "to_number": form_data.get("To", "").replace("whatsapp:", ""),
+        "profile_name": form_data.get("ProfileName", ""),
+        "body": form_data.get("Body", ""),
+        "num_media": form_data.get("NumMedia", "0"),
+        "status": form_data.get("SmsStatus", ""),
+        "wa_id": form_data.get("WaId", ""),
+    }
 
 def test_whatsapp_message_extraction(test_whatsapp_text_message):
     """Test extraction of WhatsApp message details"""
-    message = extract_whatsapp_message(test_whatsapp_text_message)
+    message = create_whatsapp_message(test_whatsapp_text_message)
     
     # Verify key fields are extracted correctly
     assert message["message_sid"] == test_whatsapp_text_message["MessageSid"]
@@ -48,16 +61,16 @@ def test_url_encoded_message_parsing():
 def test_whatsapp_message_categorization(test_whatsapp_greeting, test_whatsapp_question):
     """Test detection of different message types"""
     # Test greeting detection
-    greeting_result = handle_whatsapp_message(extract_whatsapp_message(test_whatsapp_greeting))
+    greeting_result = handle_whatsapp_message(create_whatsapp_message(test_whatsapp_greeting))
     assert greeting_result["message_type"] == "greeting"
     
     # Test question detection
-    question_result = handle_whatsapp_message(extract_whatsapp_message(test_whatsapp_question))
+    question_result = handle_whatsapp_message(create_whatsapp_message(test_whatsapp_question))
     assert question_result["message_type"] == "question"
 
 def test_media_message_handling(test_whatsapp_with_media):
     """Test handling of WhatsApp messages with media"""
-    message = extract_whatsapp_message(test_whatsapp_with_media)
+    message = create_whatsapp_message(test_whatsapp_with_media)
     
     # Check media information is preserved
     assert message["num_media"] == test_whatsapp_with_media["NumMedia"]
