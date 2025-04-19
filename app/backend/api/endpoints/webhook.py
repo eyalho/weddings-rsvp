@@ -1,22 +1,42 @@
 """
 Webhook endpoints for handling external service callbacks.
+
+This module handles all webhook-related functionality:
+- General webhook processing
+- WhatsApp message handling
+- Status callback processing
 """
 from dataclasses import asdict
-from fastapi import APIRouter, Request
+from typing import Dict, Any
 import logging
 import json
 from urllib.parse import unquote_plus
 
-# Services
-from backend.services.webhook_service import (
-    handle_webhook, 
-    handle_status_callback, 
-    handle_whatsapp_message,
-    WhatsAppMessage
-)
+from fastapi import APIRouter, Request
+
+# Import from services
+try:
+    # Try relative imports first
+    from ..services.webhook_service import (
+        handle_webhook, 
+        handle_status_callback, 
+        handle_whatsapp_message,
+        WebhookService,
+        WhatsAppMessage
+    )
+except ImportError:
+    # Fall back to absolute imports
+    from backend.services.webhook_service import (
+        handle_webhook, 
+        handle_status_callback, 
+        handle_whatsapp_message,
+        WebhookService,
+        WhatsAppMessage
+    )
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+webhook_service = WebhookService()
 
 def parse_form_data(body_str):
     """Parse URL-encoded form data."""
@@ -101,7 +121,6 @@ async def webhook_endpoint(request: Request):
                 )
                 logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body} {asdict(whatsapp_message)}")
                 
-                
                 # Process WhatsApp message directly
                 return handle_whatsapp_message(whatsapp_message)
             
@@ -123,11 +142,16 @@ async def webhook_endpoint(request: Request):
         logger.error(f"Error processing webhook: {str(e)}")
         return {"status": "error", "message": str(e)}
 
-@router.post("/status")
-async def status_endpoint(request: Request):
-    """Handle status callback requests."""
-    logger.info("Status callback received")
+@router.post("/status_callback")
+async def status_callback_endpoint(
+    request: Request,
+) -> Dict[str, Any]:
+    """
+    Handle message status callback from Twilio.
     
+    This endpoint processes status updates for messages sent via Twilio,
+    which allows tracking when messages are delivered, read, etc.
+    """
     try:
         # Get request body
         body = await request.body()
@@ -145,7 +169,6 @@ async def status_endpoint(request: Request):
             
         # Process the status callback
         return handle_status_callback(payload)
-        
     except Exception as e:
         logger.error(f"Error in status callback: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": str(e)} 

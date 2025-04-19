@@ -8,9 +8,9 @@ from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.backend.db.session import get_db
-from app.backend.db import crud
-from app.backend.db.models import RsvpGuest, RsvpStatistics
+from backend.db.session import get_db
+from backend.db import crud
+from backend.db.models import RsvpGuest, RsvpStatistics
 
 router = APIRouter()
 

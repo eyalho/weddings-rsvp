@@ -7,10 +7,10 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, ForeignKey, Text,
     Float, func, text
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 Base = declarative_base()
@@ -131,4 +131,137 @@ class RsvpStatistics(Base):
         return (self.attending_guests / self.total_guests) * 100
     
     def __repr__(self):
-        return f"<RsvpStatistics(attending={self.attending_guests}, total={self.total_guests})>" 
+        return f"<RsvpStatistics(attending={self.attending_guests}, total={self.total_guests})>"
+
+
+# Helper functions for SQLAlchemy models
+def create_response(db: Session, phone_number: str, question_key: str, response_data: Dict[str, Any]) -> UserResponse:
+    """
+    Create a new response record.
+    
+    Args:
+        db: Database session
+        phone_number: User's phone number
+        question_key: Key identifying the question or interaction
+        response_data: Dictionary with response_text and/or response_value
+        
+    Returns:
+        The created UserResponse object
+    """
+    user_response = UserResponse(
+        phone_number=phone_number,
+        question_key=question_key,
+        response_text=response_data.get("response_text", ""),
+        response_value=response_data.get("response_value", "")
+    )
+    
+    db.add(user_response)
+    db.commit()
+    db.refresh(user_response)
+    return user_response
+
+
+def get_guest_by_phone(db: Session, phone_number: str) -> Optional[RsvpGuest]:
+    """
+    Get the most recent RSVP guest record for a phone number.
+    
+    Args:
+        db: Database session
+        phone_number: Phone number to look up
+        
+    Returns:
+        The most recent RsvpGuest object or None
+    """
+    # Find the most recent user response for this phone number
+    latest_response = db.query(UserResponse).filter(
+        UserResponse.phone_number == phone_number
+    ).order_by(UserResponse.created_at.desc()).first()
+    
+    if not latest_response:
+        return None
+    
+    # Get the associated guest
+    guest = db.query(RsvpGuest).filter(
+        RsvpGuest.user_response_id == latest_response.id
+    ).first()
+    
+    return guest
+
+
+def update_guest(db: Session, guest_id: int, update_data: Dict[str, Any]) -> Optional[RsvpGuest]:
+    """
+    Update an RSVP guest record.
+    
+    Args:
+        db: Database session
+        guest_id: ID of the guest to update
+        update_data: Dictionary with fields to update
+        
+    Returns:
+        The updated RsvpGuest object or None
+    """
+    guest = db.query(RsvpGuest).filter(RsvpGuest.id == guest_id).first()
+    if not guest:
+        return None
+    
+    for key, value in update_data.items():
+        if hasattr(guest, key):
+            setattr(guest, key, value)
+    
+    db.commit()
+    db.refresh(guest)
+    return guest
+
+
+def create_guest(db: Session, response_id: int, guest_data: Dict[str, Any]) -> RsvpGuest:
+    """
+    Create a new RSVP guest record.
+    
+    Args:
+        db: Database session
+        response_id: ID of the associated user response
+        guest_data: Dictionary with guest details
+        
+    Returns:
+        The created RsvpGuest object
+    """
+    guest = RsvpGuest(
+        user_response_id=response_id,
+        name=guest_data.get("name", ""),
+        attending=guest_data.get("attending", False),
+        dietary_restrictions=guest_data.get("dietary_restrictions", "")
+    )
+    
+    db.add(guest)
+    db.commit()
+    db.refresh(guest)
+    return guest
+
+
+def get_rsvp_statistics(db: Session) -> Optional[RsvpStatistics]:
+    """
+    Get the RSVP statistics.
+    
+    Args:
+        db: Database session
+        
+    Returns:
+        The RsvpStatistics object or None
+    """
+    return db.query(RsvpStatistics).first()
+
+
+def get_responses_by_phone(db: Session, phone_number: str) -> List[UserResponse]:
+    """
+    Get all responses from a specific phone number.
+    
+    Args:
+        db: Database session
+        phone_number: Phone number to filter by
+        
+    Returns:
+        List of UserResponse objects
+    """
+    return db.query(UserResponse).filter(
+        UserResponse.phone_number == phone_number
+    ).order_by(UserResponse.created_at).all() 

@@ -89,11 +89,15 @@ def setup_frontend_routes(app: FastAPI, settings: Optional[Settings] = None) -> 
         Returns:
             Frontend index.html or 404 for API routes
         """
-        # Check for API routes first - be explicit about what's excluded
-        api_prefix = settings.API_V1_STR.lstrip('/')
-        if catch_all.startswith(api_prefix) or catch_all.startswith("api/"):
-            logger.warning(f"API route not found: {catch_all}")
-            raise NotFoundError(f"API route not found: {catch_all}")
+        # Get the full path from the request
+        full_path = request.url.path
+        
+        # Check if the path is for an API endpoint - these should be handled by the API routers
+        # and not the catch-all route
+        if full_path.startswith(settings.API_V1_STR):
+            # This is already a 404 if we reached this route
+            logger.warning(f"API route not found: {full_path}")
+            raise NotFoundError(f"API route not found: {full_path}")
         
         # Log and serve the frontend
         logger.info(f"Serving frontend for path: {catch_all}")
