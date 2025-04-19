@@ -12,18 +12,22 @@ describe('HomePage Component', () => {
     render(<HomePage />);
     
     // Check wedding details
-    expect(screen.getByText('John & Jane')).toBeInTheDocument();
-    expect(screen.getByText('June 15, 2024')).toBeInTheDocument();
-    expect(screen.getByText('Central Park, New York')).toBeInTheDocument();
+    expect(screen.getByText('יהל & אסף')).toBeInTheDocument();
+    expect(screen.getByText('כ״ה באייר תשפ״ה • 23.05.2025')).toBeInTheDocument();
+    
+    // The location appears multiple times, so we need to check differently
+    const locationElements = screen.getAllByText('הלורנס, הצורפים 18, תל אביב-יפו');
+    expect(locationElements.length).toBeGreaterThan(0);
   });
 
   test('renders wedding sections', () => {
     render(<HomePage />);
     
     // Check for main sections
-    expect(screen.getByText('Wedding Details')).toBeInTheDocument();
-    expect(screen.getByText('Ceremony')).toBeInTheDocument();
-    expect(screen.getByText('Reception')).toBeInTheDocument();
+    expect(screen.getByText('פרטי האירוע')).toBeInTheDocument();
+    expect(screen.getByText('קבלת פנים')).toBeInTheDocument();
+    expect(screen.getByText('חופה')).toBeInTheDocument();
+    expect(screen.getByText('מסיבה')).toBeInTheDocument();
     
     // Check that RSVP form is included
     expect(screen.getByTestId('rsvp-form-mock')).toBeInTheDocument();

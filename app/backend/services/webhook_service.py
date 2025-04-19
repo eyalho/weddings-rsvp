@@ -8,7 +8,7 @@ Handles webhook data processing following:
 """
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from enum import Enum
 from dataclasses import dataclass
 
@@ -77,27 +77,6 @@ class WebhookService:
         logger.debug(f"Data type: {type(data)}, Keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
         logger.debug(f"Type check: type={webhook_type}, is 'whatsapp'={webhook_type == 'whatsapp'}, has 'message'={'message' in data}")
         
-        # Check if this is a WhatsApp message
-        if webhook_type == 'whatsapp' and 'message' in data:
-            logger.info("Processing as WhatsApp message")
-            whatsapp_data = data['message']
-            # Check form data for direct message handling
-            form_data = data.get('form_data', {})
-            
-            # Use the extract_whatsapp_message format for backward compatibility with tests
-            whatsapp_message = {
-                "message_sid": form_data.get("MessageSid", ""),
-                "from_number": whatsapp_data.get("from", ""),
-                "to_number": whatsapp_data.get("to", ""),
-                "profile_name": whatsapp_data.get("profile_name", ""),
-                "body": whatsapp_data.get("body", ""),
-                "num_media": whatsapp_data.get("media_count", "0"),
-                "status": form_data.get("SmsStatus", ""),
-                "wa_id": form_data.get("WaId", ""),
-            }
-            
-            return self.handle_whatsapp_message(whatsapp_message)
-        
         # Handle empty data
         if not data or (isinstance(data, dict) and len(data) == 0) or (isinstance(data, str) and not data.strip()):
             return {"status": "webhook processed", "message": "Empty request", "type": "empty"}
@@ -108,50 +87,37 @@ class WebhookService:
         # Simple, consistent response matching test expectations
         return {"status": "webhook processed", "type": "generic"}
     
-    def handle_whatsapp_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_whatsapp_message(self, message: WhatsAppMessage) -> Dict[str, Any]:
         """
         Handle a WhatsApp message.
         
         Simple method that categorizes messages and returns appropriate responses.
         
         Args:
-            message: The WhatsApp message data
+            message: The WhatsApp message data as a WhatsAppMessage object
             
         Returns:
             Response data with message type
         """
-        # Create structured message object - makes code more readable
-        whatsapp_msg = WhatsAppMessage(
-            message_sid=message.get('message_sid', ''),
-            from_number=message.get('from_number', ''),
-            to_number=message.get('to_number', ''),
-            profile_name=message.get('profile_name', ''),
-            body=message.get('body', ''),
-            num_media=message.get('num_media', '0'),
-            status=message.get('status', ''),
-            wa_id=message.get('wa_id', ''),
-            media=message.get('media', [])
-        )
-        
         # Log what we're processing
-        logger.info(f"Processing WhatsApp message from {whatsapp_msg.profile_name}")
+        logger.info(f"Processing WhatsApp message from {message.profile_name}")
         
         # Determine message type - explicit categorization
-        message_type = self.categorize_message(whatsapp_msg)
+        message_type = self.categorize_message(message)
         
         # Log the categorization
         logger.info(
-            f"Message from {whatsapp_msg.from_number} categorized as {message_type}"
+            f"Message from {message.from_number} categorized as {message_type}"
         )
         
         # Here you would typically store the message in a database
-        # self.save_message(whatsapp_msg, message_type)
+        # self.save_message(message, message_type)
         
         # Return a simple, consistent response matching test expectations
         return {
             "status": "whatsapp_message_processed",
             "message_type": message_type,
-            "from": whatsapp_msg.from_number
+            "from": message.from_number
         }
     
     def categorize_message(self, message: WhatsAppMessage) -> str:
@@ -212,8 +178,8 @@ def handle_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
     """Legacy function for backward compatibility."""
     return webhook_service.process_webhook(data)
 
-def handle_whatsapp_message(message: Dict[str, Any]) -> Dict[str, Any]:
-    """Legacy function for backward compatibility."""
+def handle_whatsapp_message(message: WhatsAppMessage) -> Dict[str, Any]:
+    """Function for handling WhatsApp messages."""
     return webhook_service.handle_whatsapp_message(message)
 
 def handle_status_callback(data: Dict[str, Any]) -> Dict[str, Any]:

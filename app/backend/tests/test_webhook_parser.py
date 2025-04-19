@@ -13,32 +13,33 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 # Import from correct module path using absolute imports
-from backend.services.webhook_service import handle_whatsapp_message
+from backend.services.webhook_service import handle_whatsapp_message, WhatsAppMessage
 
 # Test helper function to replace the dependency on extract_whatsapp_message
 def create_whatsapp_message(form_data):
-    """Create WhatsApp message format used by tests."""
-    return {
-        "message_sid": form_data.get("MessageSid", ""),
-        "from_number": form_data.get("From", "").replace("whatsapp:", ""),
-        "to_number": form_data.get("To", "").replace("whatsapp:", ""),
-        "profile_name": form_data.get("ProfileName", ""),
-        "body": form_data.get("Body", ""),
-        "num_media": form_data.get("NumMedia", "0"),
-        "status": form_data.get("SmsStatus", ""),
-        "wa_id": form_data.get("WaId", ""),
-    }
+    """Create WhatsAppMessage object used by tests."""
+    return WhatsAppMessage(
+        message_sid=form_data.get("MessageSid", ""),
+        from_number=form_data.get("From", "").replace("whatsapp:", ""),
+        to_number=form_data.get("To", "").replace("whatsapp:", ""),
+        profile_name=form_data.get("ProfileName", ""),
+        body=form_data.get("Body", ""),
+        num_media=form_data.get("NumMedia", "0"),
+        status=form_data.get("SmsStatus", ""),
+        wa_id=form_data.get("WaId", ""),
+        media=[]
+    )
 
 def test_whatsapp_message_extraction(test_whatsapp_text_message):
     """Test extraction of WhatsApp message details"""
     message = create_whatsapp_message(test_whatsapp_text_message)
     
     # Verify key fields are extracted correctly
-    assert message["message_sid"] == test_whatsapp_text_message["MessageSid"]
-    assert message["from_number"] == test_whatsapp_text_message["From"].replace("whatsapp:", "")
-    assert message["profile_name"] == test_whatsapp_text_message["ProfileName"]
-    assert message["body"] == test_whatsapp_text_message["Body"]
-    assert message["status"] == test_whatsapp_text_message["SmsStatus"]
+    assert message.message_sid == test_whatsapp_text_message["MessageSid"]
+    assert message.from_number == test_whatsapp_text_message["From"].replace("whatsapp:", "")
+    assert message.profile_name == test_whatsapp_text_message["ProfileName"]
+    assert message.body == test_whatsapp_text_message["Body"]
+    assert message.status == test_whatsapp_text_message["SmsStatus"]
 
 def test_url_encoded_message_parsing():
     """Test parsing of URL-encoded WhatsApp messages"""
@@ -73,8 +74,8 @@ def test_media_message_handling(test_whatsapp_with_media):
     message = create_whatsapp_message(test_whatsapp_with_media)
     
     # Check media information is preserved
-    assert message["num_media"] == test_whatsapp_with_media["NumMedia"]
+    assert message.num_media == test_whatsapp_with_media["NumMedia"]
     
     # In a real implementation, you might add additional fields for media URLs
-    # assert "media_url" in message
-    # assert "media_type" in message 
+    # assert message.media is not None 
+    # assert len(message.media) > 0 

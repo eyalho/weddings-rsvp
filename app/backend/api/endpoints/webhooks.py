@@ -7,7 +7,12 @@ import json
 from urllib.parse import unquote_plus
 
 # Services
-from backend.services.webhook_service import handle_webhook, handle_status_callback
+from backend.services.webhook_service import (
+    handle_webhook, 
+    handle_status_callback, 
+    handle_whatsapp_message,
+    WhatsAppMessage
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -23,22 +28,6 @@ def parse_form_data(body_str):
     logger.info(f"Parsed form data: {form_data}")
     return form_data
 
-def extract_whatsapp_data(form_data):
-    """Extract WhatsApp specific data."""
-    # Get basic info
-    message = {
-        "from": form_data.get("From", "").replace("whatsapp:", ""),
-        "to": form_data.get("To", "").replace("whatsapp:", ""),
-        "body": form_data.get("Body", ""),
-        "profile_name": form_data.get("ProfileName", ""),
-        "media_count": form_data.get("NumMedia", "0"),
-    }
-    
-    # Log the message
-    logger.info(f"WhatsApp message from {message['profile_name']}: {message['body']}")
-    
-    return message
-
 @router.post("/webhook")
 async def webhook_endpoint(request: Request):
     """Process incoming webhook requests."""
@@ -52,37 +41,71 @@ async def webhook_endpoint(request: Request):
         # Parse based on content type
         content_type = request.headers.get('content-type', '').lower()
         
-        
-        # Not called in prod:
+        # Handle JSON payloads
         if 'application/json' in content_type:
             # JSON payload
-            payload = json.loads(body_str)
-            logger.info(f"Received JSON webhook with {len(payload)} keys")
+            json_data = json.loads(body_str)
+            logger.info(f"Received JSON webhook with {len(json_data)} keys")
+            
+            # Check if this is a WhatsApp message in JSON format
+            if json_data.get('type') == 'whatsapp' and 'message' in json_data:
+                message_data = json_data['message']
+                form_data = json_data.get('form_data', {})
+                
+                # Create WhatsAppMessage directly
+                whatsapp_message = WhatsAppMessage(
+                    message_sid=form_data.get("MessageSid", ""),
+                    from_number=message_data.get("from", ""),
+                    to_number=message_data.get("to", ""),
+                    profile_name=message_data.get("profile_name", ""),
+                    body=message_data.get("body", ""),
+                    num_media=message_data.get("media_count", "0"),
+                    status=form_data.get("SmsStatus", ""),
+                    wa_id=form_data.get("WaId", ""),
+                )
+                logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body}")
+                
+                # Process WhatsApp message directly
+                return handle_whatsapp_message(whatsapp_message)
+            
+            # Handle other JSON payloads
+            return handle_webhook(json_data)
 
-
+        # Handle form data (typical for Twilio)
         elif 'application/x-www-form-urlencoded' in content_type:
-            # Form data (typical for Twilio)
             form_data = parse_form_data(body_str)
             
             # Check if it's a WhatsApp message
             if 'From' in form_data and 'whatsapp' in form_data.get('From', ''):
-                whatsapp_data = extract_whatsapp_data(form_data)
-                payload = {
-                    "type": "whatsapp",
-                    "message": whatsapp_data,
-                    "form_data": form_data
-                }
-            else:
-                payload = {
-                    "type": "form",
-                    "data": form_data
-                }
+                # Create WhatsAppMessage directly
+                whatsapp_message = WhatsAppMessage(
+                    message_sid=form_data.get("MessageSid", ""),
+                    from_number=form_data.get("From", "").replace("whatsapp:", ""),
+                    to_number=form_data.get("To", "").replace("whatsapp:", ""),
+                    profile_name=form_data.get("ProfileName", ""),
+                    body=form_data.get("Body", ""),
+                    num_media=form_data.get("NumMedia", "0"),
+                    status=form_data.get("SmsStatus", ""),
+                    wa_id=form_data.get("WaId", ""),
+                )
+                logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body}")
+                
+                # Process WhatsApp message directly
+                return handle_whatsapp_message(whatsapp_message)
+            
+            # Handle other form data
+            return handle_webhook({
+                "type": "form",
+                "data": form_data
+            })
+        
+        # Handle other content types
         else:
             # Raw payload
-            payload = {"type": "raw", "data": body_str}
-            
-        # Process the webhook
-        return handle_webhook(payload)
+            return handle_webhook({
+                "type": "raw", 
+                "data": body_str
+            })
         
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")

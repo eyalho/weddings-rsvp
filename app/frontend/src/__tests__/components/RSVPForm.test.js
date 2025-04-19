@@ -7,29 +7,29 @@ describe('RSVPForm Component', () => {
     render(<RSVPForm />);
     
     // Check if important elements exist
-    expect(screen.getByText('RSVP to our Wedding')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/I will attend the wedding/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Submit RSVP/i })).toBeInTheDocument();
+    expect(screen.getByText('אישור הגעה')).toBeInTheDocument();
+    expect(screen.getByLabelText(/שם מלא/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/טלפון נייד/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/אשמח להגיע לחגוג איתכם/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /שליחה/i })).toBeInTheDocument();
   });
 
   test('updates form values on input change', () => {
     render(<RSVPForm />);
     
     // Get form inputs
-    const nameInput = screen.getByLabelText(/Full Name/i);
-    const emailInput = screen.getByLabelText(/Email/i);
-    const attendingCheckbox = screen.getByLabelText(/I will attend the wedding/i);
+    const nameInput = screen.getByLabelText(/שם מלא/i);
+    const phoneInput = screen.getByLabelText(/טלפון נייד/i);
+    const attendingCheckbox = screen.getByLabelText(/אשמח להגיע לחגוג איתכם/i);
     
     // Simulate user input
-    fireEvent.change(nameInput, { target: { value: 'John Doe' } });
-    fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
+    fireEvent.change(nameInput, { target: { value: 'ישראל ישראלי' } });
+    fireEvent.change(phoneInput, { target: { value: '050-1234567' } });
     fireEvent.click(attendingCheckbox); // Toggle from true to false
     
     // Check if the inputs reflect the changes
-    expect(nameInput.value).toBe('John Doe');
-    expect(emailInput.value).toBe('john@example.com');
+    expect(nameInput.value).toBe('ישראל ישראלי');
+    expect(phoneInput.value).toBe('050-1234567');
     expect(attendingCheckbox.checked).toBe(false);
   });
 }); 
