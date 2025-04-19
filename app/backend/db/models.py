@@ -12,6 +12,18 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import os
+import sys
+from sqlalchemy import engine_from_config, pool
+
+# Add parent directory to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import your models to make them available to Alembic
+from db.models import Base
+
+# Update target_metadata
+target_metadata = Base.metadata
 
 Base = declarative_base()
 
