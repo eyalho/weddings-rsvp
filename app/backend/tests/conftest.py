@@ -1,12 +1,39 @@
 import sys
+import os
 from pathlib import Path
 
-# Add the parent directory to Python path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add the backend directory to Python path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# Add the app directory to Python path for potential imports that use app.* structure
+app_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if app_dir not in sys.path:
+    sys.path.insert(0, app_dir)
+
+# Add the project root directory to Python path
+root_dir = os.path.dirname(app_dir)
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+
+# Import app directly with relative import
+try:
+    # Try importing from core directly (relative style)
+    from core.app_factory import create_app
+    app = create_app()
+except ImportError:
+    try:
+        # Try importing via backend (still relative)
+        from backend.core.app_factory import create_app
+        app = create_app()
+    except ImportError:
+        # Fallback to absolute import
+        from app.backend.core.app_factory import create_app
+        app = create_app()
 
 @pytest.fixture
 def client():

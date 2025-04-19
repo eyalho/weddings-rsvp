@@ -1,16 +1,24 @@
 """
 Tests for the application structure and initialization.
 """
+import os
+import sys
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 
-from app.backend.core.startup import init_app
-from app.backend.core.config import settings
+# Add parent directories to sys.path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# Use relative imports
+from core.startup import init_app
+from core.config import settings
 
 def test_app_initialization():
     """Test that the application initializes correctly."""
-    with patch('app.backend.core.startup.setup_logging'):
+    with patch('core.startup.setup_logging'):
         app = init_app()
         assert app.title == settings.PROJECT_NAME
         assert app.debug == settings.DEBUG
@@ -21,7 +29,7 @@ def test_app_initialization():
 
 def test_api_router_registration():
     """Test that API routers are registered correctly."""
-    with patch('app.backend.core.startup.setup_logging'):
+    with patch('core.startup.setup_logging'):
         app = init_app()
         client = TestClient(app)
         
@@ -40,9 +48,9 @@ def test_api_router_registration():
 
 def test_frontend_routes():
     """Test frontend route handling."""
-    with patch('app.backend.core.startup.setup_logging'), \
+    with patch('core.startup.setup_logging'), \
          patch('os.path.exists', return_value=True), \
-         patch('app.backend.core.routes.FileResponse', return_value={"dummy": "response"}):
+         patch('core.routes.FileResponse', return_value={"dummy": "response"}):
         app = init_app()
         client = TestClient(app)
         
@@ -60,8 +68,8 @@ def test_frontend_routes():
 
 def test_exception_handling():
     """Test that exception handlers work correctly."""
-    with patch('app.backend.core.startup.setup_logging'):
-        from app.backend.core.exceptions import AppException, NotFoundError
+    with patch('core.startup.setup_logging'):
+        from core.exceptions import AppException, NotFoundError
         
         app = init_app()
         

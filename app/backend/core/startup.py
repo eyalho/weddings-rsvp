@@ -3,6 +3,8 @@ Application startup module.
 Handles startup tasks and initialization.
 """
 import logging
+import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -95,8 +97,13 @@ def init_app() -> FastAPI:
     # Setup routes for the frontend
     setup_frontend_routes(app)
     
-    # Setup API routes - Fix relative import
-    from app.backend.api.endpoints import router as api_router
+    # Ensure all parent directories are in the path for imports
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+    
+    # Setup API routes with relative import
+    from ..api.endpoints import router as api_router
     app.include_router(api_router, prefix=settings.API_V1_STR)
     
     logger.info(f"Application initialized: {settings.PROJECT_NAME}")
