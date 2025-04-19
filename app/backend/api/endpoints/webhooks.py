@@ -97,7 +97,7 @@ async def webhook_endpoint(request: Request):
                     original_replied_message_sid=form_data.get("OriginalRepliedMessageSid", ""),
                     original_replied_message_sender=form_data.get("OriginalRepliedMessageSender", "")
                 )
-                logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body}")
+                logger.info(f"WhatsApp message from {whatsapp_message.profile_name}: {whatsapp_message.body} {whatsapp_message}")
                 
                 # Process WhatsApp message directly
                 return handle_whatsapp_message(whatsapp_message)
