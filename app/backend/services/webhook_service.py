@@ -70,10 +70,16 @@ class WebhookService:
             Response data
         """
         # Log what we're processing - be explicit
-        logger.info(f"Processing webhook data type: {data.get('type', 'unknown')}")
+        webhook_type = data.get('type', 'unknown')
+        logger.info(f"Processing webhook data type: {webhook_type}")
+        
+        # Debug log to see exact data structure
+        logger.debug(f"Data type: {type(data)}, Keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+        logger.debug(f"Type check: type={webhook_type}, is 'whatsapp'={webhook_type == 'whatsapp'}, has 'message'={'message' in data}")
         
         # Check if this is a WhatsApp message
-        if data.get('type') == 'whatsapp' and 'message' in data:
+        if webhook_type == 'whatsapp' and 'message' in data:
+            logger.info("Processing as WhatsApp message")
             whatsapp_data = data['message']
             # Check form data for direct message handling
             form_data = data.get('form_data', {})

@@ -1,0 +1,37 @@
+# Webhook Testing Commands
+
+# 1. Test WhatsApp message using form data (how Twilio sends it)
+curl -X POST "http://localhost:8000/api/v1/webhook" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "SmsMessageSid=SM123&NumMedia=0&ProfileName=TestUser&MessageType=text&SmsSid=SM123&WaId=1234567890&SmsStatus=received&Body=Hello&To=whatsapp:+9876543210&MessagingServiceSid=MG123&NumSegments=1&ReferralNumMedia=0&MessageSid=SM123&AccountSid=AC123&From=whatsapp:+1234567890&ApiVersion=2010-04-01"
+
+# 2. Test WhatsApp message using JSON format
+curl -X POST "http://localhost:8000/api/v1/webhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "whatsapp",
+    "message": {
+      "from": "+1234567890",
+      "to": "+9876543210",
+      "body": "Test JSON Message",
+      "profile_name": "JSONUser",
+      "media_count": "0"
+    },
+    "form_data": {
+      "MessageSid": "SM123",
+      "WaId": "1234567890",
+      "SmsStatus": "received"
+    }
+  }'
+
+# 3. Test generic webhook
+curl -X POST "http://localhost:8000/api/v1/webhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "test": true,
+    "message": "Test webhook",
+    "timestamp": "2023-04-19T12:00:00Z"
+  }'
+
+# To run these commands, copy each curl command and run it in the terminal
+# You should have your Flask application running on localhost:8000 
