@@ -61,15 +61,12 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     # Add custom middleware
     add_middlewares(app, settings)
     
-    # Setup frontend routes
-    setup_frontend_routes(app)
-    
     # Setup path for relative imports
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if backend_dir not in sys.path:
         sys.path.insert(0, backend_dir)
     
-    # Import and register API router
+    # Import and register API router FIRST (order matters)
     try:
         # Try relative import first
         from ..api.router import api_router
@@ -79,6 +76,10 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     
     # Include API router
     app.include_router(api_router, prefix=settings.API_V1_STR)
+    
+    # Setup frontend routes AFTER API routes
+    # This ensures the catch-all route doesn't interfere with API routes
+    setup_frontend_routes(app)
     
     # Log routes on startup for debugging
     @app.on_event("startup")

@@ -76,29 +76,33 @@ def setup_frontend_routes(app: FastAPI, settings: Optional[Settings] = None) -> 
         logger.info(f"Serving frontend index from: {index_path}")
         return FileResponse(index_path)
     
-    # Add catch-all route for SPA navigation
+    # Add catch-all route for SPA navigation with very low priority (must be registered last)
     @app.get("/{catch_all:path}", include_in_schema=False)
     async def frontend_catchall(catch_all: str, request: Request):
         """
         Serve the frontend for all non-API routes.
+        
+        This handler should only be called after all other routes (including API routes) have been checked.
         
         Args:
             catch_all: The path being requested
             request: The request object
             
         Returns:
-            Frontend index.html or 404 for API routes
+            Frontend index.html for frontend routes
         """
         # Get the full path from the request
         full_path = request.url.path
         
-        # Check if the path is for an API endpoint - these should be handled by the API routers
-        # and not the catch-all route
+        # Bypass this handler for API routes
+        # API routes should be handled by their own handlers, so if we get here with an API path,
+        # it means the route doesn't exist (already a 404)
         if full_path.startswith(settings.API_V1_STR):
-            # This is already a 404 if we reached this route
             logger.warning(f"API route not found: {full_path}")
+            # Pass to the next handler or let FastAPI generate a 404
+            # DO NOT raise an exception here - let FastAPI handle it
             raise NotFoundError(f"API route not found: {full_path}")
-        
-        # Log and serve the frontend
+            
+        # For non-API routes, serve the frontend
         logger.info(f"Serving frontend for path: {catch_all}")
         return FileResponse(os.path.join(frontend_path, "index.html")) 

@@ -13,4 +13,5 @@ api_router = APIRouter()
 # Register the webhook router
 api_router.include_router(webhook_router, tags=["webhook"])
 
+# Register the RSVP router
 api_router.include_router(rsvp_router, prefix="/rsvp", tags=["rsvp"]) 
