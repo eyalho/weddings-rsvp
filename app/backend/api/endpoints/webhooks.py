@@ -7,7 +7,7 @@ import json
 from urllib.parse import unquote_plus
 
 # Services
-from ...services.webhook_service import handle_webhook, handle_status_callback
+from backend.services.webhook_service import handle_webhook, handle_status_callback
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,6 +30,28 @@ def extract_whatsapp_data(form_data):
         "body": form_data.get("Body", ""),
         "profile_name": form_data.get("ProfileName", ""),
         "media_count": form_data.get("NumMedia", "0"),
+    }
+    
+    # Log the message
+    logger.info(f"WhatsApp message from {message['profile_name']}: {message['body']}")
+    
+    return message
+
+# For backward compatibility with tests
+def extract_whatsapp_message(form_data):
+    """Legacy function to extract WhatsApp message details from form data.
+    
+    Maintained for backward compatibility with tests.
+    """
+    message = {
+        "message_sid": form_data.get("MessageSid", ""),
+        "from_number": form_data.get("From", "").replace("whatsapp:", ""),
+        "to_number": form_data.get("To", "").replace("whatsapp:", ""),
+        "profile_name": form_data.get("ProfileName", ""),
+        "body": form_data.get("Body", ""),
+        "num_media": form_data.get("NumMedia", "0"),
+        "status": form_data.get("SmsStatus", ""),
+        "wa_id": form_data.get("WaId", ""),
     }
     
     # Log the message

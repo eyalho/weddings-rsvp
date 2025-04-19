@@ -1,8 +1,20 @@
+"""
+Tests for webhook parsing functionality.
+"""
 import pytest
+import sys
+import os
 from urllib.parse import parse_qs, unquote_plus
 import json
 
-from ..api.endpoints.webhooks import extract_whatsapp_message
+# Add backend directory to path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# Import from correct module path using absolute imports
+from backend.api.endpoints.webhooks import extract_whatsapp_message
+from backend.services.webhook_service import handle_whatsapp_message
 
 def test_whatsapp_message_extraction(test_whatsapp_text_message):
     """Test extraction of WhatsApp message details"""
@@ -35,8 +47,6 @@ def test_url_encoded_message_parsing():
 
 def test_whatsapp_message_categorization(test_whatsapp_greeting, test_whatsapp_question):
     """Test detection of different message types"""
-    from ..services.webhook_service import handle_whatsapp_message
-    
     # Test greeting detection
     greeting_result = handle_whatsapp_message(extract_whatsapp_message(test_whatsapp_greeting))
     assert greeting_result["message_type"] == "greeting"

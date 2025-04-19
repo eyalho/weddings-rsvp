@@ -70,17 +70,37 @@ class WebhookService:
             Response data
         """
         # Log what we're processing - be explicit
-        logger.info(f"Processing webhook data type: {data.get('message_type', 'unknown')}")
+        logger.info(f"Processing webhook data type: {data.get('type', 'unknown')}")
         
-        # Explicit delegation based on message type
-        if data.get('message_type') == 'whatsapp' and 'whatsapp_message' in data:
-            return self.handle_whatsapp_message(data['whatsapp_message'])
+        # Check if this is a WhatsApp message
+        if data.get('type') == 'whatsapp' and 'message' in data:
+            whatsapp_data = data['message']
+            # Check form data for direct message handling
+            form_data = data.get('form_data', {})
+            
+            # Use the extract_whatsapp_message format for backward compatibility with tests
+            whatsapp_message = {
+                "message_sid": form_data.get("MessageSid", ""),
+                "from_number": whatsapp_data.get("from", ""),
+                "to_number": whatsapp_data.get("to", ""),
+                "profile_name": whatsapp_data.get("profile_name", ""),
+                "body": whatsapp_data.get("body", ""),
+                "num_media": whatsapp_data.get("media_count", "0"),
+                "status": form_data.get("SmsStatus", ""),
+                "wa_id": form_data.get("WaId", ""),
+            }
+            
+            return self.handle_whatsapp_message(whatsapp_message)
         
+        # Handle empty data
+        if not data or (isinstance(data, dict) and len(data) == 0) or (isinstance(data, str) and not data.strip()):
+            return {"status": "webhook processed", "message": "Empty request", "type": "empty"}
+            
         # Simple logging of payload details
         logger.info(f"Generic webhook payload: {json.dumps(data, indent=2, default=str)}")
         
-        # Simple, consistent response
-        return {"status": "webhook_processed", "type": "generic"}
+        # Simple, consistent response matching test expectations
+        return {"status": "webhook processed", "type": "generic"}
     
     def handle_whatsapp_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -121,7 +141,7 @@ class WebhookService:
         # Here you would typically store the message in a database
         # self.save_message(whatsapp_msg, message_type)
         
-        # Return a simple, consistent response
+        # Return a simple, consistent response matching test expectations
         return {
             "status": "whatsapp_message_processed",
             "message_type": message_type,
@@ -174,8 +194,8 @@ class WebhookService:
         # Simple logging - be explicit about what we're doing
         logger.info(f"Processing status callback: {json.dumps(data, indent=2, default=str)}")
         
-        # Return simple, consistent response
-        return {"status": "status_callback_processed"}
+        # Return simple, consistent response matching test expectations
+        return {"status": "status callback processed"}
 
 
 # Create a default instance for simple imports and backward compatibility

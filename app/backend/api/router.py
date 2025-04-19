@@ -5,7 +5,8 @@ from fastapi import APIRouter, Request
 import logging
 import json
 
-from .endpoints.webhooks import router as webhooks_router
+from backend.api.endpoints.webhooks import router as webhooks_router
+from backend.services.webhook_service import handle_status_callback
 
 # Create main API router
 api_router = APIRouter()
@@ -44,5 +45,23 @@ async def webhook_post(request: Request):
             
         # Default response
         return {"status": "success", "message": "Webhook received", "type": "raw"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# Status callback endpoint
+@api_router.post("/status_callback")
+async def status_callback_post(request: Request):
+    """Status callback endpoint for processing status updates."""
+    try:
+        body = await request.body()
+        body_text = body.decode("utf-8", errors="replace")
+        
+        # Process JSON data
+        try:
+            json_data = json.loads(body_text)
+            return handle_status_callback(json_data)
+        except:
+            # Handle form data or raw content
+            return handle_status_callback({"raw_data": body_text})
     except Exception as e:
         return {"status": "error", "message": str(e)} 

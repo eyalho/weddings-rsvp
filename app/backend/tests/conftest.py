@@ -19,25 +19,36 @@ if root_dir not in sys.path:
 
 import pytest
 from fastapi.testclient import TestClient
+from unittest.mock import patch, MagicMock
 
-# Import app directly with relative import
-try:
-    # Try importing from core directly (relative style)
-    from core.app_factory import create_app
-    app = create_app()
-except ImportError:
-    try:
-        # Try importing via backend (still relative)
-        from backend.core.app_factory import create_app
-        app = create_app()
-    except ImportError:
-        # Fallback to absolute import
-        from app.backend.core.app_factory import create_app
-        app = create_app()
+# Import directly from backend
+from backend.core.app_factory import create_app
+from backend.core.config import settings
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    """Create a test client with a fresh FastAPI app instance optimized for testing."""
+    # Create test settings with DEBUG enabled
+    test_settings = settings.model_copy(update={
+        "DEBUG": True,
+    })
+    
+    # Setup a fresh app with mocks to prevent frontend routes from being registered
+    with patch('backend.core.routes.setup_frontend_routes') as mock_setup_frontend:
+        # Mock the frontend setup function to do nothing
+        mock_setup_frontend.return_value = None
+        
+        # Create app with no frontend routes
+        app = create_app(test_settings)
+        
+        # Import the API router directly
+        from backend.api.router import api_router
+        
+        # Mount the API router at root level for easier testing
+        app.include_router(api_router)
+        
+        # Return the test client
+        return TestClient(app)
 
 @pytest.fixture
 def test_webhook_payload():
