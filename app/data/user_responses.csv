@@ -1,0 +1,7 @@
+timestamp,phone_number,profile_name,response_type,response_data,message_sid,wa_id
+2025-04-19T15:17:39.170945,+1234567890,,message_MessageType.GENERAL,"{""body"": ""Test message""}",,
+2025-04-19T15:17:39.183012,+9725012345678,נועה,message_MessageType.GREETING,"{""body"": ""\u05e9\u05dc\u05d5\u05dd""}",SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,9725012345678
+2025-04-19T15:17:39.184024,+9725098765432,דניאל,message_MessageType.QUESTION,"{""body"": ""\u05d4\u05d0\u05dd \u05d9\u05e9 \u05d7\u05e0\u05d9\u05d4 \u05d1\u05d0\u05d5\u05dc\u05dd?""}",SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,9725098765432
+2025-04-19T15:17:39.263022,+972506228892,Eyal,message_MessageType.GENERAL,"{""body"": ""\u05d0\u05d9\u05e9\u05d5\u05e8 \u05d4\u05d2\u05e2\u05d4""}",SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,972506228892
+2025-04-19T15:17:39.280005,+9725012345678,נועה,message_MessageType.GREETING,"{""body"": ""\u05e9\u05dc\u05d5\u05dd""}",SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,9725012345678
+2025-04-19T15:17:39.294524,+9725098765432,דניאל,message_MessageType.QUESTION,"{""body"": ""\u05d4\u05d0\u05dd \u05d9\u05e9 \u05d7\u05e0\u05d9\u05d4 \u05d1\u05d0\u05d5\u05dc\u05dd?""}",SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,9725098765432

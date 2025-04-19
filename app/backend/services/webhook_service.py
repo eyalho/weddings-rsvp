@@ -214,6 +214,9 @@ class ResponseHandler:
         """
         logger.info(f"Handling button response: {message.button_text} (payload: {message.button_payload})")
         
+        # Save the button response to storage
+        self.data_storage.save_button_response(message, message.button_text, message.button_payload)
+        
         # Handle specific button responses
         if message.button_text == "לצערי לא" and message.button_payload == "2":
             # Custom response for "Unfortunately not" button with payload 2
@@ -293,6 +296,14 @@ class WebhookService:
         logger.info(
             f"Message from {message.from_number} categorized as {message_type}"
         )
+        
+        # Save all non-empty messages for general chat history
+        if message.body.strip() and hasattr(self.response_handler, 'data_storage'):
+            self.response_handler.data_storage.save_response(
+                message, 
+                f'message_{message_type}', 
+                {'body': message.body}
+            )
         
         # Handle different message types
         if message_type == MessageType.BUTTON:
