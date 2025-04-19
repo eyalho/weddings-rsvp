@@ -1,12 +1,10 @@
 import logging
 import json
+import sys
 from pprint import pformat
 
-# Set up logging to show WARNING level messages
-logging.basicConfig(
-    level=logging.WARNING,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Don't configure logging here, use the configuration from main.py
+# logging.basicConfig() calls should only happen once in the application
 logger = logging.getLogger(__name__)
 
 def handle_webhook(data: dict):
