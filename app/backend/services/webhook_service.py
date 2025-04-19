@@ -177,9 +177,26 @@ class WebhookService:
         
         logger.info(f"Handling decline response from {message.profile_name}")
         
-        # Set Twilio credentials
-        account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "AC313eff5e520d98b7d65bc54c571b9712")
-        auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "a77d1627c0b5e8b88fe2c28159eacdf2")
+        # Response data
+        response = {
+            "status": "decline_response_processed",
+            "message_type": MessageType.BUTTON,
+            "response_type": "decline",
+            "from": message.from_number
+        }
+        
+        # Set Twilio credentials - retrieve from environment variables
+        account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+        auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+        
+        # Validate credentials are available
+        if not account_sid or not auth_token:
+            error_msg = "Twilio credentials not properly configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN environment variables."
+            logger.error(error_msg)
+            response["twilio_status"] = "error"
+            response["twilio_error"] = error_msg
+            return response
+            
         client = Client(account_sid, auth_token)
         
         # WhatsApp config
@@ -203,14 +220,6 @@ class WebhookService:
                 "2": date,
                 "3": rsvp_link
             }
-        
-        # Response data
-        response = {
-            "status": "decline_response_processed",
-            "message_type": MessageType.BUTTON,
-            "response_type": "decline",
-            "from": message.from_number
-        }
         
         try:
             # Ensure phone is in correct format
@@ -242,14 +251,24 @@ class WebhookService:
             response["twilio_message_sid"] = twilio_message.sid
             
         except TwilioRestException as e:
-            logger.error(f"Failed to send message: {str(e)}")
-            response["twilio_status"] = "error"
-            response["twilio_error"] = str(e)
+            error_msg = f"Failed to send message via Twilio: {str(e)}"
+            logger.error(error_msg)
+            
+            # Check for authentication errors
+            if e.code == 20003 or "401" in str(e):
+                auth_error = "Twilio authentication failed. Please verify your TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN environment variables."
+                logger.error(auth_error)
+                response["twilio_status"] = "auth_error"
+                response["twilio_error"] = auth_error
+            else:
+                response["twilio_status"] = "error"
+                response["twilio_error"] = error_msg
             
         except Exception as e:
-            logger.error(f"Unexpected error sending Twilio message: {str(e)}")
+            error_msg = f"Unexpected error sending Twilio message: {str(e)}"
+            logger.error(error_msg)
             response["twilio_status"] = "error"
-            response["twilio_error"] = str(e)
+            response["twilio_error"] = error_msg
             
         return response
         
