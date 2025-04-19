@@ -19,31 +19,69 @@ async def webhook_endpoint(request: Request):
     log_directly("Webhook endpoint called")
     
     try:
-        # Get the raw payload without validation
-        body = await request.body()
-        log_directly(f"Raw request body: {body}")
+        # Get the raw request details
+        method = request.method
+        url = str(request.url)
+        headers = dict(request.headers)
+        log_directly(f"Request details: Method={method}, URL={url}")
+        log_directly(f"Headers: {json.dumps(headers, indent=2)}")
         
-        payload = await request.json()
-        log_directly(f"Received webhook payload: {json.dumps(payload, indent=2)}")
-        return handle_webhook(payload)
+        # Read the raw body
+        body = await request.body()
+        body_str = body.decode('utf-8', errors='replace')
+        log_directly(f"Raw request body ({len(body_str)} chars): '{body_str}'")
+        
+        # If body is empty, handle gracefully
+        if not body_str or body_str.isspace():
+            log_directly("Empty request body received")
+            return {"status": "webhook processed", "message": "Empty request received"}
+        
+        # Try to parse as JSON
+        try:
+            payload = json.loads(body_str)
+            log_directly(f"Parsed JSON payload: {json.dumps(payload, indent=2)}")
+            return handle_webhook(payload)
+        except json.JSONDecodeError as je:
+            log_directly(f"JSON parsing failed: {str(je)}")
+            return {"status": "error", "message": f"Invalid JSON: {str(je)}"}
+            
     except Exception as e:
         error_msg = f"Error in webhook endpoint: {str(e)}"
         log_directly(error_msg)
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "message": str(e)}
 
 @router.post("/status_callback")
 async def status_callback_endpoint(request: Request):
     log_directly("Status callback endpoint called")
     
     try:
-        # Get the raw payload without validation
-        body = await request.body()
-        log_directly(f"Raw request body: {body}")
+        # Get the raw request details
+        method = request.method
+        url = str(request.url)
+        headers = dict(request.headers)
+        log_directly(f"Request details: Method={method}, URL={url}")
+        log_directly(f"Headers: {json.dumps(headers, indent=2)}")
         
-        payload = await request.json()
-        log_directly(f"Received status callback payload: {json.dumps(payload, indent=2)}")
-        return handle_status_callback(payload)
+        # Read the raw body
+        body = await request.body()
+        body_str = body.decode('utf-8', errors='replace')
+        log_directly(f"Raw request body ({len(body_str)} chars): '{body_str}'")
+        
+        # If body is empty, handle gracefully
+        if not body_str or body_str.isspace():
+            log_directly("Empty request body received")
+            return {"status": "status callback processed", "message": "Empty request received"}
+        
+        # Try to parse as JSON
+        try:
+            payload = json.loads(body_str)
+            log_directly(f"Parsed JSON payload: {json.dumps(payload, indent=2)}")
+            return handle_status_callback(payload)
+        except json.JSONDecodeError as je:
+            log_directly(f"JSON parsing failed: {str(je)}")
+            return {"status": "error", "message": f"Invalid JSON: {str(je)}"}
+            
     except Exception as e:
         error_msg = f"Error in status callback endpoint: {str(e)}"
         log_directly(error_msg)
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "message": str(e)}
