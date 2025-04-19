@@ -53,7 +53,6 @@ class WhatsAppMessage:
     status: str
     wa_id: str
     # Button interaction fields
-    message_type: str = ""
     button_text: str = ""
     button_payload: str = ""
     original_replied_message_sid: str = ""
@@ -432,7 +431,7 @@ class WebhookService:
             Message type
         """
         # Check for button interactions first
-        if message.message_type == 'button':
+        if message.button_text or message.button_payload:
             logger.info(f"Button interaction detected: {message.button_text} (payload: {message.button_payload})")
             return MessageType.BUTTON
         

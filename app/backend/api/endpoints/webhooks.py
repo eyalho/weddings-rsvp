@@ -92,7 +92,6 @@ async def webhook_endpoint(request: Request):
                     num_media=form_data.get("NumMedia", "0"),
                     status=form_data.get("SmsStatus", ""),
                     wa_id=form_data.get("WaId", ""),
-                    message_type=form_data.get("MessageType", ""),
                     button_text=form_data.get("ButtonText", ""),
                     button_payload=form_data.get("ButtonPayload", ""),
                     original_replied_message_sid=form_data.get("OriginalRepliedMessageSid", ""),
