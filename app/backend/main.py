@@ -1,55 +1,31 @@
-import logging
+"""
+Application entry point.
+Creates and configures the FastAPI application.
+"""
+import os
 import sys
 
-# Configure root logger to output to stdout
-# This should be near the top of the file, before any imports that might configure logging
-logging.basicConfig(
-    level=logging.WARNING,  # Match your desired level
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout,  # Force output to stdout which Gunicorn can capture
-    force=True  # Override any existing configuration
-)
+# Make imports explicit and obvious - Zen: "Explicit is better than implicit"
+# Add the parent directory to path to enable absolute imports
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-import os
-from .api.endpoints import webhooks
-from .core.config import settings
+# Simple, direct import - Zen: "Simple is better than complex"
+from app.backend.core.app_factory import create_app
 
-logger = logging.getLogger(__name__)
-logger.info("Starting wedding RSVP API application")
+# Create the application - no magic, just a simple factory call
+app = create_app()
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-)
-
-# Include routers
-app.include_router(webhooks.router, prefix=settings.API_V1_STR)
-
-# Define frontend path - adjust this path as needed
-frontend_build_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "build"))
-
-# Define the root route handler with conditional logic
-@app.get("/", include_in_schema=False)
-async def root():
-    logger.info("Root endpoint accessed")
-    if os.path.exists(frontend_build_path):
-        logger.warning("Serving frontend index.html")
-        return FileResponse(os.path.join(frontend_build_path, "index.html"))
-    else:
-        logger.info("Serving API welcome message")
-        return JSONResponse(content={"message": "Welcome to the wedding RSVP API"})
-
-# Mount static files if build directory exists
-if os.path.exists(frontend_build_path):
-    app.mount("/static", StaticFiles(directory=os.path.join(frontend_build_path, "static")), name="static")
+# Direct invocation for local development
+if __name__ == "__main__":
+    import uvicorn
     
-    @app.get("/{catch_all:path}", include_in_schema=False)
-    async def serve_frontend_catchall(catch_all: str):
-        # Exclude API routes
-        if catch_all.startswith("api/"):
-            logger.warning(f"API route not found: {catch_all}")
-            raise HTTPException(status_code=404, detail="Not found")
-        logger.info(f"Serving frontend for path: {catch_all}")
-        return FileResponse(os.path.join(frontend_build_path, "index.html"))
+    # Explicit configuration - Zen: "Explicit is better than implicit"
+    uvicorn.run(
+        "app.backend.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

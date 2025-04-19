@@ -1,76 +1,195 @@
-import logging
-import json
-import sys
-from pprint import pformat
+"""
+Webhook service module.
 
-# Don't configure logging here, use the configuration from main.py
-# logging.basicConfig() calls should only happen once in the application
+Handles webhook data processing following:
+- "Simple is better than complex"
+- "Explicit is better than implicit"
+- "Readability counts"
+"""
+import json
+import logging
+from typing import Dict, Any, Optional, List
+from enum import Enum
+from dataclasses import dataclass
+
+# Module-level logger with explicit name
 logger = logging.getLogger(__name__)
 
-def handle_webhook(data: dict):
-    """Process incoming webhook data.
-    
-    This function handles different types of webhook data,
-    with special handling for WhatsApp messages.
-    """
-    logger.warning(f"Processing webhook data of type: {data.get('message_type', 'unknown')}")
-    
-    # Check if this is a WhatsApp message
-    if data.get('message_type') == 'whatsapp':
-        return handle_whatsapp_message(data['whatsapp_message'])
-    
-    # Add verbose debugging output (using warning level to ensure it's printed)
-    logger.warning("Webhook payload details:")
-    logger.warning("=" * 50)
-    logger.warning("Content type: %s", type(data))
-    logger.warning("Content structure:\n%s", pformat(data, indent=2))
-    
-    try:
-        # Pretty print the JSON for better readability in logs
-        pretty_json = json.dumps(data, indent=2, sort_keys=True)
-        logger.warning("Full webhook content:\n%s", pretty_json)
-    except Exception as e:
-        logger.error("Error printing webhook content: %s", str(e))
-    
-    logger.warning("=" * 50)
-    
-    return {"status": "webhook processed"}
 
-def handle_whatsapp_message(message: dict):
-    """Handle a WhatsApp message from Twilio.
-    
-    This function processes the structured WhatsApp message data
-    and takes appropriate actions based on the message content.
+class MessageType(str, Enum):
     """
-    logger.warning(f"Processing WhatsApp message from {message['profile_name']}")
+    Explicit message type enumeration.
     
-    # Extract key information
-    from_number = message['from_number']
-    message_body = message['body']
-    
-    # Example: Respond differently based on message content
-    response = {"status": "whatsapp_message_processed"}
-    
-    # You could implement different actions based on message content
-    if message_body.lower() in ['hi', 'hello', 'שלום']:
-        logger.warning(f"Greeting received from {from_number}")
-        response["message_type"] = "greeting"
-    elif "rsvp" in message_body.lower() or "אישור" in message_body:
-        logger.warning(f"RSVP intent detected from {from_number}")
-        response["message_type"] = "rsvp"
-    elif "?" in message_body or "שאלה" in message_body:
-        logger.warning(f"Question detected from {from_number}")
-        response["message_type"] = "question"
-    else:
-        logger.warning(f"General message from {from_number}")
-        response["message_type"] = "general"
-    
-    # You would typically store this message in your database here
-    # db.save_message(message)
-    
-    return response
+    Makes valid message types explicit rather than using magic strings.
+    """
+    GREETING = "greeting"
+    RSVP = "rsvp"
+    QUESTION = "question"
+    MEDIA = "media"
+    GENERAL = "general"
+    UNKNOWN = "unknown"
 
-def handle_status_callback(data: dict):
-    # Logic to process status updates
-    logger.warning("Processing status callback data: %s", data)
-    return {"status": "status callback processed"}
+
+@dataclass
+class WhatsAppMessage:
+    """
+    WhatsApp message data structure.
+    
+    Using dataclass makes the structure explicit and self-documenting.
+    """
+    message_sid: str
+    from_number: str
+    to_number: str
+    profile_name: str
+    body: str
+    num_media: str
+    status: str
+    wa_id: str
+    media: Optional[List[Dict[str, str]]] = None
+
+
+class WebhookService:
+    """
+    Service for processing webhook data.
+    
+    Using a class with explicit methods makes the responsibilities
+    clear and follows good OOP design.
+    """
+    
+    def process_webhook(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process incoming webhook data.
+        
+        Simple, focused method that delegates to appropriate handlers
+        based on message type.
+        
+        Args:
+            data: The webhook payload
+            
+        Returns:
+            Response data
+        """
+        # Log what we're processing - be explicit
+        logger.info(f"Processing webhook data type: {data.get('message_type', 'unknown')}")
+        
+        # Explicit delegation based on message type
+        if data.get('message_type') == 'whatsapp' and 'whatsapp_message' in data:
+            return self.handle_whatsapp_message(data['whatsapp_message'])
+        
+        # Simple logging of payload details
+        logger.info(f"Generic webhook payload: {json.dumps(data, indent=2, default=str)}")
+        
+        # Simple, consistent response
+        return {"status": "webhook_processed", "type": "generic"}
+    
+    def handle_whatsapp_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle a WhatsApp message.
+        
+        Simple method that categorizes messages and returns appropriate responses.
+        
+        Args:
+            message: The WhatsApp message data
+            
+        Returns:
+            Response data with message type
+        """
+        # Create structured message object - makes code more readable
+        whatsapp_msg = WhatsAppMessage(
+            message_sid=message.get('message_sid', ''),
+            from_number=message.get('from_number', ''),
+            to_number=message.get('to_number', ''),
+            profile_name=message.get('profile_name', ''),
+            body=message.get('body', ''),
+            num_media=message.get('num_media', '0'),
+            status=message.get('status', ''),
+            wa_id=message.get('wa_id', ''),
+            media=message.get('media', [])
+        )
+        
+        # Log what we're processing
+        logger.info(f"Processing WhatsApp message from {whatsapp_msg.profile_name}")
+        
+        # Determine message type - explicit categorization
+        message_type = self.categorize_message(whatsapp_msg)
+        
+        # Log the categorization
+        logger.info(
+            f"Message from {whatsapp_msg.from_number} categorized as {message_type}"
+        )
+        
+        # Here you would typically store the message in a database
+        # self.save_message(whatsapp_msg, message_type)
+        
+        # Return a simple, consistent response
+        return {
+            "status": "whatsapp_message_processed",
+            "message_type": message_type,
+            "from": whatsapp_msg.from_number
+        }
+    
+    def categorize_message(self, message: WhatsAppMessage) -> str:
+        """
+        Categorize a WhatsApp message.
+        
+        Simple, focused method with a single responsibility.
+        
+        Args:
+            message: The WhatsApp message
+            
+        Returns:
+            Message type
+        """
+        # Use the message body for categorization
+        body = message.body.lower()
+        
+        # Clear, explicit checks for each message type
+        if int(message.num_media) > 0:
+            return MessageType.MEDIA
+            
+        if body in ['hi', 'hello', 'שלום', 'היי', 'hey']:
+            return MessageType.GREETING
+            
+        if any(word in body for word in ["rsvp", "אישור", "מגיע", "מגיעים"]):
+            return MessageType.RSVP
+            
+        if '?' in body or any(word in body for word in ["שאלה", "מתי", "איפה", "כמה", "מה"]):
+            return MessageType.QUESTION
+            
+        # Default case
+        return MessageType.GENERAL
+    
+    def handle_status_callback(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle status callback data.
+        
+        Simple method that processes status updates.
+        
+        Args:
+            data: Status callback data
+            
+        Returns:
+            Response data
+        """
+        # Simple logging - be explicit about what we're doing
+        logger.info(f"Processing status callback: {json.dumps(data, indent=2, default=str)}")
+        
+        # Return simple, consistent response
+        return {"status": "status_callback_processed"}
+
+
+# Create a default instance for simple imports and backward compatibility
+webhook_service = WebhookService()
+
+# Simple function aliases for backward compatibility
+def handle_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Legacy function for backward compatibility."""
+    return webhook_service.process_webhook(data)
+
+def handle_whatsapp_message(message: Dict[str, Any]) -> Dict[str, Any]:
+    """Legacy function for backward compatibility."""
+    return webhook_service.handle_whatsapp_message(message)
+
+def handle_status_callback(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Legacy function for backward compatibility."""
+    return webhook_service.handle_status_callback(data)
