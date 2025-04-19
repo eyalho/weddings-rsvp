@@ -1,15 +1,15 @@
 """
 Storage service module.
 
-Handles persistence of data to various storage backends.
+Handles persistence of data to PostgreSQL database.
 """
-import csv
 import json
 import logging
 import os
 from datetime import datetime
-from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
+import psycopg2
+from psycopg2.extras import RealDictCursor, Json
 
 # Module-level logger with explicit name
 logger = logging.getLogger(__name__)
@@ -19,18 +19,37 @@ class DataStorage:
     """
     Service for storing response data.
     
-    Handles persistence of message data to various storage backends.
+    Handles persistence of message data to PostgreSQL database.
     """
     
-    def __init__(self, base_dir: str = "data"):
+    def __init__(self, db_uri: Optional[str] = None):
         """
         Initialize the DataStorage service.
         
         Args:
-            base_dir: Base directory for storing data files
+            db_uri: PostgreSQL connection URI. If None, uses environment variable.
         """
-        self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(exist_ok=True)
+        # Get database URI from environment variable if not provided
+        self.db_uri = db_uri or os.environ.get(
+            "DATABASE_URL",
+            "postgresql://eyalh:ddDYj6p4bJObufNKFGq4qhqvOwVelBQ4@dpg-d01p48buibrs73b1ht40-a/rsvp_4sgh"
+        )
+        self._test_connection()
+    
+    def _test_connection(self):
+        """Test the database connection and log the result."""
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT version();")
+                    version = cursor.fetchone()[0]
+                    logger.info(f"Connected to PostgreSQL. Version: {version}")
+        except Exception as e:
+            logger.error(f"Failed to connect to PostgreSQL: {str(e)}")
+            
+    def _get_connection(self):
+        """Get a PostgreSQL connection."""
+        return psycopg2.connect(self.db_uri)
     
     def save_response(self, message, response_type: str, response_data: Dict[str, Any]) -> bool:
         """
@@ -45,48 +64,32 @@ class DataStorage:
             True if successful, False otherwise
         """
         try:
-            # Define the CSV file path for all responses
-            csv_path = self.base_dir / "user_responses.csv"
-            file_exists = csv_path.exists()
-            
-            # Define the fields for the CSV
-            fields = [
-                'timestamp', 
-                'phone_number',  # Unique identifier
-                'profile_name', 
-                'response_type',
-                'response_data', 
-                'message_sid', 
-                'wa_id'
-            ]
-            
-            # Prepare response data as JSON string
-            response_json = json.dumps(response_data)
-            
-            # Open the file in append mode
-            with open(csv_path, mode='a', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=fields)
-                
-                # Write header if file doesn't exist
-                if not file_exists:
-                    writer.writeheader()
-                
-                # Write the data
-                writer.writerow({
-                    'timestamp': datetime.now().isoformat(),
-                    'phone_number': message.from_number,
-                    'profile_name': message.profile_name,
-                    'response_type': response_type,
-                    'response_data': response_json,
-                    'message_sid': message.message_sid,
-                    'wa_id': message.wa_id
-                })
-                
-            logger.info(f"Saved {response_type} response from {message.phone_number} to {csv_path}")
+            with self._get_connection() as conn:
+                with conn.cursor() as cursor:
+                    # Insert into user_responses table
+                    cursor.execute(
+                        """
+                        INSERT INTO user_responses 
+                        (phone_number, profile_name, response_type, response_data, 
+                        message_sid, wa_id, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            message.from_number,
+                            message.profile_name,
+                            response_type,
+                            Json(response_data),
+                            message.message_sid,
+                            message.wa_id,
+                            datetime.now()
+                        )
+                    )
+                    
+            logger.info(f"Saved {response_type} response from {message.from_number} to database")
             return True
             
         except Exception as e:
-            logger.error(f"Failed to save response to CSV: {str(e)}")
+            logger.error(f"Failed to save response to database: {str(e)}")
             return False
             
     def get_user_responses(self, phone_number: str) -> List[Dict[str, Any]]:
@@ -101,39 +104,30 @@ class DataStorage:
         """
         responses = []
         try:
-            # Define the CSV file path
-            csv_path = self.base_dir / "user_responses.csv"
+            with self._get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT * FROM user_responses
+                        WHERE phone_number = %s
+                        ORDER BY created_at DESC
+                        """,
+                        (phone_number,)
+                    )
+                    responses = cursor.fetchall()
             
-            # If file doesn't exist, return empty list
-            if not csv_path.exists():
-                return responses
-                
-            # Read the CSV file
-            with open(csv_path, mode='r', newline='') as file:
-                reader = csv.DictReader(file)
-                
-                # Filter responses by phone number
-                for row in reader:
-                    if row['phone_number'] == phone_number:
-                        # Parse the JSON response data
-                        try:
-                            row['response_data'] = json.loads(row['response_data'])
-                        except:
-                            # If JSON parsing fails, keep as string
-                            pass
-                            
-                        responses.append(row)
-            
-            logger.info(f"Retrieved {len(responses)} responses for user {phone_number}")
-            return responses
+            # Convert responses to list of dictionaries
+            result = [dict(row) for row in responses]
+            logger.info(f"Retrieved {len(result)} responses for user {phone_number}")
+            return result
             
         except Exception as e:
             logger.error(f"Failed to retrieve user responses: {str(e)}")
-            return responses
+            return []
     
     def save_numeric_response(self, message, response_value: str) -> None:
         """
-        Save numeric response to CSV file.
+        Save numeric response to database.
         
         Args:
             message: The WhatsApp message
@@ -142,44 +136,10 @@ class DataStorage:
         # Use the general save_response method with specific response type
         response_data = {'value': response_value}
         self.save_response(message, 'numeric', response_data)
-        
-        # Also maintain backward compatibility with the old format
-        try:
-            # Define the CSV file path for numeric responses (legacy)
-            csv_path = self.base_dir / "numeric_responses.csv"
-            file_exists = csv_path.exists()
-            
-            # Define the fields for the CSV
-            fields = [
-                'timestamp', 'phone_number', 'profile_name', 
-                'response_value', 'message_sid', 'wa_id'
-            ]
-            
-            # Open the file in append mode
-            with open(csv_path, mode='a', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=fields)
-                
-                # Write header if file doesn't exist
-                if not file_exists:
-                    writer.writeheader()
-                
-                # Write the data
-                writer.writerow({
-                    'timestamp': datetime.now().isoformat(),
-                    'phone_number': message.from_number,
-                    'profile_name': message.profile_name,
-                    'response_value': response_value,
-                    'message_sid': message.message_sid,
-                    'wa_id': message.wa_id
-                })
-                
-            logger.info(f"Saved numeric response to legacy format at {csv_path}")
-        except Exception as e:
-            logger.error(f"Failed to save numeric response to legacy CSV: {str(e)}")
             
     def save_button_response(self, message, button_text: str, button_payload: str) -> bool:
         """
-        Save button response to storage.
+        Save button response to database.
         
         Args:
             message: The WhatsApp message
@@ -193,4 +153,179 @@ class DataStorage:
             'button_text': button_text,
             'button_payload': button_payload
         }
-        return self.save_response(message, 'button', response_data) 
+        return self.save_response(message, 'button', response_data)
+        
+    def get_latest_user_response(self, phone_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the latest response from a user.
+        
+        Args:
+            phone_number: The user's phone number
+            
+        Returns:
+            The latest response or None if no responses exist
+        """
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT * FROM user_responses
+                        WHERE phone_number = %s
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                        """,
+                        (phone_number,)
+                    )
+                    response = cursor.fetchone()
+                    
+            if response:
+                return dict(response)
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve latest user response: {str(e)}")
+            return None
+    
+    def get_responses_by_type(self, response_type: str) -> List[Dict[str, Any]]:
+        """
+        Get all responses of a specific type.
+        
+        Args:
+            response_type: The type of responses to retrieve
+            
+        Returns:
+            List of responses
+        """
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT * FROM user_responses
+                        WHERE response_type = %s
+                        ORDER BY created_at DESC
+                        """,
+                        (response_type,)
+                    )
+                    responses = cursor.fetchall()
+                    
+            result = [dict(row) for row in responses]
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve responses by type: {str(e)}")
+            return []
+    
+    def get_rsvp_status(self, phone_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Get RSVP status for a specific guest by phone number.
+        
+        Args:
+            phone_number: Phone number as unique identifier
+            
+        Returns:
+            Dictionary with RSVP information or None if not found
+        """
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT id, phone_number, name, rsvp_status, num_guests, 
+                               dietary_restrictions, last_interaction_at
+                        FROM rsvp_guests
+                        WHERE phone_number = %s
+                        """,
+                        (phone_number,)
+                    )
+                    result = cursor.fetchone()
+                    
+            if result:
+                return dict(result)
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve RSVP status: {str(e)}")
+            return None
+            
+    def update_rsvp_details(self, phone_number: str, updates: Dict[str, Any]) -> bool:
+        """
+        Update RSVP details for a guest.
+        
+        Args:
+            phone_number: Phone number as unique identifier
+            updates: Dictionary of fields to update
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not updates:
+            return True
+            
+        try:
+            # Build the SET clause dynamically
+            set_clause_parts = []
+            params = []
+            
+            for field, value in updates.items():
+                set_clause_parts.append(f"{field} = %s")
+                params.append(value)
+            
+            # Add the phone_number to the parameters
+            params.append(phone_number)
+            
+            set_clause = ", ".join(set_clause_parts)
+            
+            with self._get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        f"""
+                        UPDATE rsvp_guests
+                        SET {set_clause}
+                        WHERE phone_number = %s
+                        """,
+                        params
+                    )
+                    
+            logger.info(f"Updated RSVP details for {phone_number}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update RSVP details: {str(e)}")
+            return False
+    
+    def get_rsvp_statistics(self) -> Dict[str, int]:
+        """
+        Get overall RSVP statistics.
+        
+        Returns:
+            Dictionary with RSVP statistics
+        """
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("SELECT * FROM rsvp_statistics")
+                    result = cursor.fetchone()
+                    
+            if result:
+                return dict(result)
+            return {
+                "total_guests": 0,
+                "confirmed_count": 0,
+                "declined_count": 0,
+                "pending_count": 0,
+                "unknown_count": 0,
+                "total_attendees": 0
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve RSVP statistics: {str(e)}")
+            return {
+                "total_guests": 0,
+                "confirmed_count": 0,
+                "declined_count": 0,
+                "pending_count": 0,
+                "unknown_count": 0,
+                "total_attendees": 0
+            } 

@@ -63,6 +63,24 @@ class Settings(BaseSettings):
         description="CORS allowed origins"
     )
     
+    # Database settings
+    DATABASE_URI: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/wedding_rsvp",
+        description="Database connection URI"
+    )
+    
+    # SQLAlchemy settings
+    SQL_ECHO: bool = Field(
+        default=False,
+        description="Enable SQLAlchemy query logging"
+    )
+    
+    # WhatsApp settings
+    WHATSAPP_VERIFY_TOKEN: str = Field(
+        default="your_verify_token_here",
+        description="WhatsApp API verification token"
+    )
+    
     # File-based configuration
     model_config = {
         "env_file": ".env",

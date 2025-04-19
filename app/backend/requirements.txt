@@ -7,3 +7,6 @@ pydantic-settings==2.2.1
 httpx==0.25.0  # For TestClient
 python-dotenv==1.0.0
 twilio==8.5.0  # For WhatsApp messaging
+psycopg2-binary==2.9.9  # For PostgreSQL database
+sqlalchemy==2.0.25  # For ORM
+alembic==1.12.1  # For SQLAlchemy migrations
