@@ -8,9 +8,14 @@ Handles webhook data processing following:
 """
 import json
 import logging
+import os
+import re
+import csv
+from datetime import datetime
 from typing import Dict, Any, Optional, List, Union
 from enum import Enum
 from dataclasses import dataclass
+from pathlib import Path
 
 # Module-level logger with explicit name
 logger = logging.getLogger(__name__)
@@ -28,6 +33,7 @@ class MessageType(str, Enum):
     MEDIA = "media"
     GENERAL = "general"
     BUTTON = "button"
+    NUMERIC = "numeric"
     UNKNOWN = "unknown"
 
 
@@ -114,9 +120,11 @@ class WebhookService:
             f"Message from {message.from_number} categorized as {message_type}"
         )
         
-        # Handle button responses if applicable
+        # Handle different message types
         if message_type == MessageType.BUTTON:
             return self._handle_button_response(message)
+        elif message_type == MessageType.NUMERIC:
+            return self._handle_numeric_response(message)
         
         # Here you would typically store the message in a database
         # self.save_message(message, message_type)
@@ -144,10 +152,12 @@ class WebhookService:
         if message.button_text == "לצערי לא" and message.button_payload == "2":
             # Custom response for "Unfortunately not" button with payload 2
             return self._handle_decline_response(message)
-            
-        # Add more button response handlers here as needed
-        # elif message.button_text == "..." and message.button_payload == "...":
-        #     return self._handle_other_response(message)
+        elif message.button_text == "כן, אגיע!" and message.button_payload == "1":
+            # Custom response for approval button
+            return self._handle_approve_response(message)
+        elif message.button_text == "עוד לא יודע/ת" and message.button_payload == "3":
+            # Custom response for "Don't know yet" button 
+            return self._handle_not_know_yet_response(message)
             
         # Default button response
         return {
@@ -158,32 +168,33 @@ class WebhookService:
             "from": message.from_number
         }
     
-    def _handle_decline_response(self, message: WhatsAppMessage) -> Dict[str, Any]:
+    def _send_twilio_template(self, message: WhatsAppMessage, template_sid: str, additional_data: Dict = None) -> Dict[str, Any]:
         """
-        Handle decline response (לצערי לא - Unfortunately not).
-        Send a follow-up message using Twilio API.
+        Core method to send Twilio templates - reduces code duplication.
         
         Args:
-            message: The WhatsApp message with decline button interaction
+            message: The WhatsApp message to respond to
+            template_sid: The Twilio template SID to use
+            additional_data: Any additional data to include in the response
             
         Returns:
-            Response data for decline interaction
+            Response data with Twilio status
         """
         import os
         import json
-        import re
         from twilio.rest import Client
         from twilio.base.exceptions import TwilioRestException
         
-        logger.info(f"Handling decline response from {message.profile_name}")
-        
-        # Response data
+        # Base response data
         response = {
-            "status": "decline_response_processed",
+            "status": "response_processed",
             "message_type": MessageType.BUTTON,
-            "response_type": "decline",
             "from": message.from_number
         }
+        
+        # Add any additional data
+        if additional_data:
+            response.update(additional_data)
         
         # Set Twilio credentials - retrieve from environment variables
         account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
@@ -201,7 +212,6 @@ class WebhookService:
         
         # WhatsApp config
         from_number = "whatsapp:+972509518554"
-        template_sid = "HXbfc74d3f86589ff6553694987fe72c99"
         
         # Extract guest info from the message
         guest_name = message.profile_name
@@ -271,7 +281,144 @@ class WebhookService:
             response["twilio_error"] = error_msg
             
         return response
+    
+    def _handle_decline_response(self, message: WhatsAppMessage) -> Dict[str, Any]:
+        """
+        Handle decline response (לצערי לא - Unfortunately not).
+        Send a follow-up message using Twilio API.
         
+        Args:
+            message: The WhatsApp message with decline button interaction
+            
+        Returns:
+            Response data for decline interaction
+        """
+        logger.info(f"Handling decline response from {message.profile_name}")
+        
+        # Use the shared template sending method with decline-specific template
+        template_sid = "HXbfc74d3f86589ff6553694987fe72c99"
+        return self._send_twilio_template(
+            message, 
+            template_sid,
+            {"response_type": "decline"}
+        )
+    
+    def _handle_approve_response(self, message: WhatsAppMessage) -> Dict[str, Any]:
+        """
+        Handle approve response (בשמחה - Gladly).
+        Send a follow-up message using Twilio API.
+        
+        Args:
+            message: The WhatsApp message with approve button interaction
+            
+        Returns:
+            Response data for approve interaction
+        """
+        logger.info(f"Handling approve response from {message.profile_name}")
+        
+        # Use the shared template sending method with approve-specific template
+        template_sid = "HXd10781b44eab25e5088956bfa0cfc541"
+        return self._send_twilio_template(
+            message, 
+            template_sid,
+            {"response_type": "approve"}
+        )
+    
+    def _handle_not_know_yet_response(self, message: WhatsAppMessage) -> Dict[str, Any]:
+        """
+        Handle "don't know yet" response (לא יודע/ת עדיין).
+        Send a follow-up message using Twilio API.
+        
+        Args:
+            message: The WhatsApp message with "don't know yet" button interaction
+            
+        Returns:
+            Response data for "don't know yet" interaction
+        """
+        logger.info(f"Handling 'don't know yet' response from {message.profile_name}")
+        
+        # Use the shared template sending method with "don't know yet"-specific template
+        template_sid = "HX9eddabf5aea2ec56279755bde2160640"
+        return self._send_twilio_template(
+            message, 
+            template_sid,
+            {"response_type": "not_know_yet"}
+        )
+    
+    def _save_to_csv(self, message: WhatsAppMessage, response_value: str) -> None:
+        """
+        Save message details to CSV file.
+        
+        Args:
+            message: The WhatsApp message 
+            response_value: The numeric response value
+        """
+        try:
+            # Create data directory if it doesn't exist
+            data_dir = Path("data")
+            data_dir.mkdir(exist_ok=True)
+            
+            # Define the CSV file path
+            csv_path = data_dir / "numeric_responses.csv"
+            file_exists = csv_path.exists()
+            
+            # Define the fields for the CSV
+            fields = [
+                'timestamp', 'phone_number', 'profile_name', 
+                'response_value', 'message_sid', 'wa_id'
+            ]
+            
+            # Open the file in append mode
+            with open(csv_path, mode='a', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=fields)
+                
+                # Write header if file doesn't exist
+                if not file_exists:
+                    writer.writeheader()
+                
+                # Write the data
+                writer.writerow({
+                    'timestamp': datetime.now().isoformat(),
+                    'phone_number': message.from_number,
+                    'profile_name': message.profile_name,
+                    'response_value': response_value,
+                    'message_sid': message.message_sid,
+                    'wa_id': message.wa_id
+                })
+                
+            logger.info(f"Saved numeric response to {csv_path}")
+        except Exception as e:
+            logger.error(f"Failed to save numeric response to CSV: {str(e)}")
+    
+    def _handle_numeric_response(self, message: WhatsAppMessage) -> Dict[str, Any]:
+        """
+        Handle numeric responses (1-9).
+        Save to CSV and send a follow-up message using Twilio API.
+        
+        Args:
+            message: The WhatsApp message with numeric response
+            
+        Returns:
+            Response data for numeric interaction
+        """
+        # Extract numeric value
+        numeric_value = message.body.strip()
+        logger.info(f"Handling numeric response '{numeric_value}' from {message.profile_name}")
+        
+        # Save to CSV
+        self._save_to_csv(message, numeric_value)
+        
+        # Use the shared template sending method with numeric-specific template
+        template_sid = "HXf67e92a3d1ed68775b925abc2dd1d325"
+        return self._send_twilio_template(
+            message, 
+            template_sid,
+            {
+                "response_type": "numeric", 
+                "numeric_value": numeric_value
+            }
+        )
+    
     def _categorize_message(self, message: WhatsAppMessage) -> str:
         """
         Categorize a WhatsApp message.
@@ -291,6 +438,11 @@ class WebhookService:
         
         # Use the message body for categorization
         body = message.body.lower()
+        
+        # Check for numeric response (single digit 1-9)
+        if body.strip().isdigit() and len(body.strip()) == 1 and int(body.strip()) in range(1, 10):
+            logger.info(f"Numeric response detected: {body}")
+            return MessageType.NUMERIC
         
         # Clear, explicit checks for each message type
         if int(message.num_media) > 0:
