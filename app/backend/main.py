@@ -1,36 +1,40 @@
 """
 Application entry point.
-Creates and configures the FastAPI application.
 """
 import os
 import sys
 
-# Make imports explicit and obvious - Zen: "Explicit is better than implicit"
-# Add the root directory to path to enable absolute imports
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+# Add the parent directories to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+app_dir = os.path.dirname(current_dir)
+root_dir = os.path.dirname(app_dir)
 
-# This allows imports from the 'app' package
-app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if app_dir not in sys.path:
-    sys.path.insert(0, app_dir)
+# Add both paths for flexibility in imports
+for path in [current_dir, app_dir, root_dir]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
-# Simple, direct import - Zen: "Simple is better than complex"
+# Import app factory
 from backend.core.app_factory import create_app
 
-# Create the application - no magic, just a simple factory call
+# Create the application
 app = create_app()
 
 # Direct invocation for local development
 if __name__ == "__main__":
     import uvicorn
     
-    # Explicit configuration - Zen: "Explicit is better than implicit"
+    # Run with uvicorn directly
+    # Usage: python -m uvicorn backend.main:app --reload
+    print("Run the app with: python -m uvicorn backend.main:app --reload")
+    
+    # For production:
+    # gunicorn -w 1 -k uvicorn.workers.UvicornWorker --access-logfile - --error-logfile - --log-level debug backend.main:app
+    
+    # Default run configuration if script is executed directly
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
         port=8000,
-        reload=True,
         log_level="info"
     )

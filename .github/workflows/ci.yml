@@ -22,10 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r app/backend/requirements.txt
       - name: Run Python tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}
         run: |
-          cd ${{ github.workspace }}
           python -m pytest app/backend/tests/ -v
       
       # Frontend setup and testing

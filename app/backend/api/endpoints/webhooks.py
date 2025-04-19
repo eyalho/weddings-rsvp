@@ -1,173 +1,110 @@
-from fastapi import APIRouter, HTTPException, Request, Form
-from ...services.webhook_service import handle_webhook, handle_status_callback
+"""
+Webhook endpoints for handling external service callbacks.
+"""
+from fastapi import APIRouter, Request
 import logging
-import sys
 import json
-from urllib.parse import parse_qs, unquote_plus
+from urllib.parse import unquote_plus
+
+# Services
+from ...services.webhook_service import handle_webhook, handle_status_callback
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Direct print function that ensures output is visible
-def log_directly(message):
-    print(f"WEBHOOK_DEBUG: {message}", flush=True)
-    sys.stdout.write(f"WEBHOOK_DIRECT_LOG: {message}\n")
-    sys.stdout.flush()
-    logger.warning(message)
+def parse_form_data(body_str):
+    """Parse URL-encoded form data."""
+    form_data = {}
+    for param in body_str.split('&'):
+        if '=' in param:
+            key, value = param.split('=', 1)
+            form_data[key] = unquote_plus(value)
+    return form_data
 
-def extract_whatsapp_message(form_data):
-    """Extract and format WhatsApp message details from Twilio form data"""
-    # Extract key fields with URL decoding
+def extract_whatsapp_data(form_data):
+    """Extract WhatsApp specific data."""
+    # Get basic info
     message = {
-        "message_sid": form_data.get("MessageSid", ""),
-        "from_number": unquote_plus(form_data.get("From", "").replace("whatsapp:", "")),
-        "to_number": unquote_plus(form_data.get("To", "").replace("whatsapp:", "")),
-        "profile_name": unquote_plus(form_data.get("ProfileName", "")),
-        "body": unquote_plus(form_data.get("Body", "")),
-        "num_media": form_data.get("NumMedia", "0"),
-        "status": form_data.get("SmsStatus", ""),
-        "wa_id": form_data.get("WaId", ""),
+        "from": form_data.get("From", "").replace("whatsapp:", ""),
+        "to": form_data.get("To", "").replace("whatsapp:", ""),
+        "body": form_data.get("Body", ""),
+        "profile_name": form_data.get("ProfileName", ""),
+        "media_count": form_data.get("NumMedia", "0"),
     }
     
-    # Format a clean log message
-    log_message = (
-        f"📱 WhatsApp Message Received:\n"
-        f"  From: {message['profile_name']} ({message['from_number']})\n"
-        f"  To: {message['to_number']}\n"
-        f"  Message: \"{message['body']}\"\n"
-        f"  Status: {message['status']}\n"
-        f"  Media: {message['num_media']}\n"
-        f"  SID: {message['message_sid']}"
-    )
+    # Log the message
+    logger.info(f"WhatsApp message from {message['profile_name']}: {message['body']}")
     
-    log_directly(log_message)
     return message
 
 @router.post("/webhook")
 async def webhook_endpoint(request: Request):
-    log_directly("Webhook endpoint called")
+    """Process incoming webhook requests."""
+    logger.info("Webhook request received")
     
     try:
-        # Get the raw request details
-        method = request.method
-        url = str(request.url)
-        headers = dict(request.headers)
-        log_directly(f"Request details: Method={method}, URL={url}")
-        log_directly(f"Content-Type: {headers.get('content-type', 'Not specified')}")
-        
-        # Read the raw body
+        # Get request body
         body = await request.body()
         body_str = body.decode('utf-8', errors='replace')
-        log_directly(f"Raw request body ({len(body_str)} chars): '{body_str}'")
         
-        # If body is empty, handle gracefully
-        if not body_str or body_str.isspace():
-            log_directly("Empty request body received")
-            return {"status": "webhook processed", "message": "Empty request received"}
-        
-        # Check content type and parse accordingly
-        content_type = headers.get('content-type', '').lower()
+        # Parse based on content type
+        content_type = request.headers.get('content-type', '').lower()
         
         if 'application/json' in content_type:
-            # Handle JSON data
-            try:
-                payload = json.loads(body_str)
-                log_directly(f"Parsed JSON payload: {json.dumps(payload, indent=2)}")
-            except json.JSONDecodeError as je:
-                log_directly(f"JSON parsing failed: {str(je)}")
-                return {"status": "error", "message": f"Invalid JSON: {str(je)}"}
-        
-        elif 'application/x-www-form-urlencoded' in content_type or ('&' in body_str and '=' in body_str):
-            # Handle form data (typical for Twilio webhooks)
-            try:
-                # Parse form data properly, handling URL encoding
-                form_data = {}
-                params = body_str.split('&')
-                for param in params:
-                    if '=' in param:
-                        key, value = param.split('=', 1)
-                        form_data[key] = unquote_plus(value)
-                
-                log_directly(f"Parsed form data keys: {', '.join(form_data.keys())}")
-                
-                # Check if this is a Twilio WhatsApp message
-                if 'From' in form_data and 'whatsapp' in form_data.get('From', ''):
-                    # Extract structured WhatsApp message details
-                    whatsapp_message = extract_whatsapp_message(form_data)
-                    # Use the structured message as payload
-                    payload = {
-                        "message_type": "whatsapp",
-                        "whatsapp_message": whatsapp_message,
-                        "raw_form_data": form_data
-                    }
-                else:
-                    # Regular form data
-                    payload = {
-                        "message_type": "form_data",
-                        "form_data": form_data
-                    }
-            except Exception as e:
-                log_directly(f"Form data parsing failed: {str(e)}")
-                # Create a simple payload from the raw body
-                payload = {"raw_data": body_str}
-        else:
-            # Handle as raw data
-            log_directly("Unknown content type, treating as raw data")
-            payload = {"raw_data": body_str}
-        
-        # Process the webhook with the parsed payload
-        return handle_webhook(payload)
+            # JSON payload
+            payload = json.loads(body_str)
+            logger.info(f"Received JSON webhook with {len(payload)} keys")
+        elif 'application/x-www-form-urlencoded' in content_type:
+            # Form data (typical for Twilio)
+            form_data = parse_form_data(body_str)
             
+            # Check if it's a WhatsApp message
+            if 'From' in form_data and 'whatsapp' in form_data.get('From', ''):
+                whatsapp_data = extract_whatsapp_data(form_data)
+                payload = {
+                    "type": "whatsapp",
+                    "message": whatsapp_data,
+                    "form_data": form_data
+                }
+            else:
+                payload = {
+                    "type": "form",
+                    "data": form_data
+                }
+        else:
+            # Raw payload
+            payload = {"type": "raw", "data": body_str}
+            
+        # Process the webhook
+        return handle_webhook(payload)
+        
     except Exception as e:
-        error_msg = f"Error in webhook endpoint: {str(e)}"
-        log_directly(error_msg)
+        logger.error(f"Error processing webhook: {str(e)}")
         return {"status": "error", "message": str(e)}
 
-@router.post("/status_callback")
-async def status_callback_endpoint(request: Request):
-    log_directly("Status callback endpoint called")
+@router.post("/status")
+async def status_endpoint(request: Request):
+    """Handle status callback requests."""
+    logger.info("Status callback received")
     
     try:
-        # Get the raw request details
-        method = request.method
-        url = str(request.url)
-        headers = dict(request.headers)
-        log_directly(f"Request details: Method={method}, URL={url}")
-        log_directly(f"Headers: {json.dumps(headers, indent=2)}")
-        
-        # Read the raw body
+        # Get request body
         body = await request.body()
         body_str = body.decode('utf-8', errors='replace')
-        log_directly(f"Raw request body ({len(body_str)} chars): '{body_str}'")
         
-        # If body is empty, handle gracefully
-        if not body_str or body_str.isspace():
-            log_directly("Empty request body received")
-            return {"status": "status callback processed", "message": "Empty request received"}
+        # Parse based on content type
+        content_type = request.headers.get('content-type', '').lower()
         
-        # Try to parse as JSON
-        try:
+        if 'application/json' in content_type:
             payload = json.loads(body_str)
-            log_directly(f"Parsed JSON payload: {json.dumps(payload, indent=2)}")
-            return handle_status_callback(payload)
-        except json.JSONDecodeError as je:
-            log_directly(f"JSON parsing failed: {str(je)}")
-            # Try to parse as form data
-            try:
-                form_data = {}
-                params = body_str.split('&')
-                for param in params:
-                    if '=' in param:
-                        key, value = param.split('=', 1)
-                        form_data[key] = unquote_plus(value)
-                
-                log_directly(f"Parsed form data: {json.dumps(form_data, indent=2)}")
-                return handle_status_callback(form_data)
-            except Exception as e:
-                log_directly(f"Form data parsing failed: {str(e)}")
-                return {"status": "error", "message": "Could not parse request data"}
+        elif 'application/x-www-form-urlencoded' in content_type:
+            payload = parse_form_data(body_str)
+        else:
+            payload = {"raw_data": body_str}
             
+        # Process the status callback
+        return handle_status_callback(payload)
+        
     except Exception as e:
-        error_msg = f"Error in status callback endpoint: {str(e)}"
-        log_directly(error_msg)
+        logger.error(f"Error in status callback: {str(e)}")
         return {"status": "error", "message": str(e)}

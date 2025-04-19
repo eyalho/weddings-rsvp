@@ -38,6 +38,27 @@ npm start
 
 The frontend will be available at http://localhost:3000
 
+## Python Import Patterns
+
+The backend uses two import approaches depending on the context:
+
+1. **Relative imports** within the backend package:
+   ```python
+   from ..core.config import settings  # From api module to core module
+   from .middleware import RequestLoggingMiddleware  # Within same module
+   ```
+
+2. **Absolute imports** when needed (with proper Python path setup):
+   ```python
+   # Setting up Python path in main.py
+   import os, sys
+   root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+   sys.path.insert(0, root_dir)
+   
+   # Then imports can work
+   from app.backend.core.app_factory import create_app
+   ```
+
 ## CI/CD
 
 This project uses GitHub Actions for continuous integration. The workflow:
@@ -53,3 +74,14 @@ This project uses:
 - Backend: Python with FastAPI
 - Frontend: React
 - Database: SQLite (development) / PostgreSQL (production)
+
+## Running Tests
+
+```bash
+# From project root
+python -m pytest app/backend/tests -v
+
+# From backend directory
+cd app/backend
+python -m pytest tests -v
+```
