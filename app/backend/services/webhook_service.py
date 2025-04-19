@@ -53,6 +53,7 @@ class WhatsAppMessage:
     status: str
     wa_id: str
     # Button interaction fields
+    message_type: str = ""
     button_text: str = ""
     button_payload: str = ""
     original_replied_message_sid: str = ""
