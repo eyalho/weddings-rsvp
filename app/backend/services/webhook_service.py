@@ -41,7 +41,7 @@ class MessageType(str, Enum):
 class WhatsAppMessage:
     """
     WhatsApp message data structure.
-    
+    https://www.twilio.com/docs/messaging/guides/webhook-request
     Using dataclass makes the structure explicit and self-documenting.
     """
     message_sid: str
@@ -296,7 +296,7 @@ class WebhookService:
         logger.info(f"Handling decline response from {message.profile_name}")
         
         # Use the shared template sending method with decline-specific template
-        template_sid = "HXbfc74d3f86589ff6553694987fe72c99"
+        template_sid = "HX4b154aac4a81de7cebb4cb42fbd837a9"
         return self._send_twilio_template(
             message, 
             template_sid,
