@@ -3,7 +3,7 @@ from ...services.webhook_service import handle_webhook, handle_status_callback
 import logging
 import sys
 import json
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote_plus
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -14,6 +14,34 @@ def log_directly(message):
     sys.stdout.write(f"WEBHOOK_DIRECT_LOG: {message}\n")
     sys.stdout.flush()
     logger.warning(message)
+
+def extract_whatsapp_message(form_data):
+    """Extract and format WhatsApp message details from Twilio form data"""
+    # Extract key fields with URL decoding
+    message = {
+        "message_sid": form_data.get("MessageSid", ""),
+        "from_number": unquote_plus(form_data.get("From", "").replace("whatsapp:", "")),
+        "to_number": unquote_plus(form_data.get("To", "").replace("whatsapp:", "")),
+        "profile_name": unquote_plus(form_data.get("ProfileName", "")),
+        "body": unquote_plus(form_data.get("Body", "")),
+        "num_media": form_data.get("NumMedia", "0"),
+        "status": form_data.get("SmsStatus", ""),
+        "wa_id": form_data.get("WaId", ""),
+    }
+    
+    # Format a clean log message
+    log_message = (
+        f"📱 WhatsApp Message Received:\n"
+        f"  From: {message['profile_name']} ({message['from_number']})\n"
+        f"  To: {message['to_number']}\n"
+        f"  Message: \"{message['body']}\"\n"
+        f"  Status: {message['status']}\n"
+        f"  Media: {message['num_media']}\n"
+        f"  SID: {message['message_sid']}"
+    )
+    
+    log_directly(log_message)
+    return message
 
 @router.post("/webhook")
 async def webhook_endpoint(request: Request):
@@ -49,27 +77,35 @@ async def webhook_endpoint(request: Request):
                 log_directly(f"JSON parsing failed: {str(je)}")
                 return {"status": "error", "message": f"Invalid JSON: {str(je)}"}
         
-        elif 'application/x-www-form-urlencoded' in content_type or '&' in body_str and '=' in body_str:
+        elif 'application/x-www-form-urlencoded' in content_type or ('&' in body_str and '=' in body_str):
             # Handle form data (typical for Twilio webhooks)
             try:
-                # Parse form data
+                # Parse form data properly, handling URL encoding
                 form_data = {}
                 params = body_str.split('&')
                 for param in params:
                     if '=' in param:
                         key, value = param.split('=', 1)
-                        form_data[key] = value
+                        form_data[key] = unquote_plus(value)
                 
-                log_directly(f"Parsed form data: {json.dumps(form_data, indent=2)}")
-                payload = form_data
+                log_directly(f"Parsed form data keys: {', '.join(form_data.keys())}")
                 
                 # Check if this is a Twilio WhatsApp message
                 if 'From' in form_data and 'whatsapp' in form_data.get('From', ''):
-                    log_directly("Detected Twilio WhatsApp webhook")
-                    # Extract the key message details
-                    from_number = form_data.get('From', '').replace('whatsapp:', '')
-                    message_body = form_data.get('Body', '')
-                    log_directly(f"WhatsApp message from {from_number}: {message_body}")
+                    # Extract structured WhatsApp message details
+                    whatsapp_message = extract_whatsapp_message(form_data)
+                    # Use the structured message as payload
+                    payload = {
+                        "message_type": "whatsapp",
+                        "whatsapp_message": whatsapp_message,
+                        "raw_form_data": form_data
+                    }
+                else:
+                    # Regular form data
+                    payload = {
+                        "message_type": "form_data",
+                        "form_data": form_data
+                    }
             except Exception as e:
                 log_directly(f"Form data parsing failed: {str(e)}")
                 # Create a simple payload from the raw body
@@ -123,7 +159,7 @@ async def status_callback_endpoint(request: Request):
                 for param in params:
                     if '=' in param:
                         key, value = param.split('=', 1)
-                        form_data[key] = value
+                        form_data[key] = unquote_plus(value)
                 
                 log_directly(f"Parsed form data: {json.dumps(form_data, indent=2)}")
                 return handle_status_callback(form_data)
