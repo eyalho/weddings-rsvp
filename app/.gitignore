@@ -183,3 +183,27 @@ out/
 dist/
 dist-ssr/
 *.local
+
+# Environment variables and secrets
+.env
+.env.*
+*.env
+.credentials
+secrets.toml
+credentials.json
+secrets.json
+*_credentials.*
+*_secrets.*
+twilio_credentials.py
+
+# Ignore any .secret files
+*.secret
+*.secrets
+*.key
+
+# Ignore coverage reports
+htmlcov/
+.coverage
+coverage/
+coverage.xml
+*.cover
